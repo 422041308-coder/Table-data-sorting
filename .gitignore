@@ -1,0 +1,19 @@
+# 构建产物 / 二进制
+dist/
+*.exe
+*.zip
+*.bundle
+
+# 运行时数据（含本地路径、备份、审计、方案）
+data/
+data/tmp/
+
+# 证书私钥（绝不能提交）
+*.pfx
+codesign.cer
+SHA256SUMS.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo

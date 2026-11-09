@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>表格检索 / 模板改造 / 数据核对 —— 操作说明</title>
+<style>
+:root{
+  --ink:#1f2937; --muted:#64748b; --line:#e2e8f0; --accent:#4f46e5;
+  --accent2:#0ea5e9; --warn:#b45309; --bg:#f6f8fb; --card:#ffffff;
+  --code-bg:#f1f5f9; --th:#eef2f7;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:15px/1.75 "Microsoft YaHei","PingFang SC","Segoe UI",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* layout */
+#toc{
+  position:fixed;left:0;top:0;bottom:0;width:288px;overflow:auto;
+  background:#0f172a;color:#cbd5e1;padding:26px 20px 40px;
+}
+#toc .brand{font-size:16px;font-weight:700;color:#fff;letter-spacing:.5px}
+#toc .brand small{display:block;font-size:11.5px;font-weight:400;color:#7c8aa5;margin-top:5px;letter-spacing:0}
+#toc .grp{margin-top:22px}
+#toc .grp>a{display:block;font-size:12px;font-weight:700;color:#93a4c4;text-transform:none;
+  padding:4px 0 6px;border-bottom:1px solid #1e2a44;margin-bottom:6px}
+#toc ul{list-style:none;margin:0;padding:0}
+#toc li a{display:block;color:#b6c2d6;font-size:12.8px;line-height:1.55;
+  padding:3px 8px;border-radius:6px;border-left:2px solid transparent}
+#toc li a:hover{background:#1b2740;color:#fff;text-decoration:none}
+#toc li.lv3 a{padding-left:20px;color:#8fa0bd;font-size:12.2px}
+#toc .foot{margin-top:28px;font-size:11px;color:#5d6b85;line-height:1.7}
+
+main{margin-left:288px;padding:34px 46px 90px;max-width:1180px}
+.hero{
+  background:linear-gradient(120deg,#eef2ff 0%,#e0f2fe 100%);
+  border:1px solid #dbe4f0;border-radius:16px;padding:26px 30px;margin-bottom:30px;
+}
+.hero h1{margin:0 0 6px;font-size:25px;letter-spacing:.3px}
+.hero p{margin:0;color:#475569;font-size:13.5px}
+.kpis{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.kpi{background:#fff;border:1px solid #dbe4f0;border-radius:11px;padding:9px 14px;min-width:118px}
+.kpi b{display:block;font-size:19px;color:var(--accent);line-height:1.25}
+.kpi span{font-size:11.5px;color:var(--muted)}
+
+h1.doc{font-size:22px;margin:46px 0 10px;padding:8px 0 12px;border-bottom:2px solid var(--accent);letter-spacing:.3px}
+h2{font-size:19px;margin:44px 0 14px;padding-left:11px;border-left:4px solid var(--accent);letter-spacing:.2px}
+h3{font-size:15.5px;margin:28px 0 10px;color:#334155;padding-left:9px;border-left:3px solid #c7d2fe}
+h4{font-size:14px;margin:20px 0 8px;color:#334155}
+p{margin:10px 0}
+strong{color:#111827}
+
+/* tables */
+.tablewrap{overflow-x:auto;margin:14px 0 18px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:13.2px;line-height:1.62}
+th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;overflow-wrap:break-word}
+th:last-child,td:last-child{border-right:none}
+tr:last-child td{border-bottom:none}
+th{background:var(--th);font-weight:700;color:#334155;white-space:nowrap}
+tbody tr:nth-child(even){background:#fbfcfe}
+td code,th code{white-space:nowrap}
+
+/* code */
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:15px 17px;
+  overflow-x:auto;margin:14px 0;font-size:12.8px;line-height:1.72}
+pre code{font-family:"Cascadia Mono",Consolas,"Courier New",monospace;white-space:pre;color:#1e293b}
+p code,li code,td code,blockquote code{background:#eef2f7;border:1px solid #e2e8f0;border-radius:5px;
+  padding:1px 5px;font-family:"Cascadia Mono",Consolas,monospace;font-size:12.3px;color:#0f172a}
+blockquote{margin:14px 0;padding:11px 16px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:0 8px 8px 0;color:#78350f;font-size:13.6px}
+blockquote p{margin:0}
+ul,ol{margin:10px 0;padding-left:24px}
+li{margin:5px 0}
+hr{border:none;border-top:1px dashed #cbd5e1;margin:34px 0}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px;margin:14px 0;display:block;box-shadow:0 2px 10px rgba(15,23,42,.06)}
+
+/* architecture diagram */
+.arch{margin:18px 0 8px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:18px 18px 12px}
+.arch .layer{display:flex;gap:14px;align-items:stretch;border-radius:10px;padding:12px 15px;margin-bottom:0}
+.arch .layer+.arrow{text-align:center;color:#94a3b8;font-size:15px;line-height:1.4;margin:2px 0}
+.arch .lt{flex:0 0 132px;font-weight:700;font-size:13.5px;color:#fff;border-radius:8px;padding:5px 10px;display:flex;align-items:center;justify-content:center;text-align:center}
+.arch .lc{flex:1;min-width:0}
+.arch .lc .head{font-weight:700;font-size:13.5px;margin-bottom:6px;color:#1e293b}
+.arch .chips{display:flex;flex-wrap:wrap;gap:6px}
+.arch .chip{background:#fff;border:1px solid #dbe4f0;border-radius:7px;padding:3px 9px;font-size:11.8px;color:#334155;white-space:nowrap}
+.arch .chip.key{border-color:#c7d2fe;background:#eef2ff;color:#3730a3;font-weight:700}
+.l1 .lt{background:#6d28d9}.l1{background:#f5f3ff;border:1px solid #ede9fe}
+.l2 .lt{background:#4f46e5}.l2{background:#eef2ff;border:1px solid #e0e7ff}
+.l3 .lt{background:#0284c7}.l3{background:#eff6ff;border:1px solid #dbeafe}
+.l4 .lt{background:#0d9488}.l4{background:#f0fdfa;border:1px solid #ccfbf1}
+.l5 .lt{background:#b45309}.l5{background:#fffbeb;border:1px solid #fef3c7}
+.arch .io{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1}
+.arch .io .box{flex:1;min-width:230px;border:1px dashed #cbd5e1;border-radius:9px;padding:8px 12px;background:#f8fafc;font-size:12.4px;color:#475569}
+.arch .io .box b{color:#1e293b}
+.legend{font-size:11.8px;color:var(--muted);margin:6px 0 0}
+.tag{display:inline-block;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:20px;
+  font-size:11px;padding:1px 9px;margin-right:6px;vertical-align:1px}
+
+@media (max-width:1100px){
+  #toc{position:static;width:auto;height:auto}
+  main{margin-left:0;padding:22px 18px 70px}
+  .arch .layer{flex-direction:column}
+  .arch .lt{flex:none}
+}
+@media print{
+  #toc{display:none}
+  main{margin:0;max-width:none;padding:0}
+  body{background:#fff}
+  .hero{background:#fff}
+  h2{page-break-after:avoid}
+  .tablewrap,pre,.arch{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<nav id="toc"><div class="brand">表格检索 / 模板改造 / 数据核对 —— 操作说明<small>用户手册 v1.0 · 脱敏示例版</small></div><div class="grp"><a href="#top">操作说明（用户手册）</a><ul><li><a href="#sec1">一、启动与关闭</a></li><li class="lv3"><a href="#sec2">方式 A：EXE 绿色版（推荐）</a></li><li class="lv3"><a href="#sec3">方式 B：源码运行（改代码或没打包时）</a></li><li class="lv3"><a href="#sec4">首次使用三步</a></li><li><a href="#sec5">二、界面总览</a></li><li><a href="#sec6">三、检索页：找数、定位、修改</a></li><li class="lv3"><a href="#sec7">1. 搜索</a></li><li class="lv3"><a href="#sec8">2. 看懂结果</a></li><li class="lv3"><a href="#sec9">3. 修改单元格（写回）</a></li><li class="lv3"><a href="#sec10">4. 查找替换</a></li><li><a href="#sec11">四、字段映射页：把别的表转成台账</a></li><li class="lv3"><a href="#sec12">1. 登记模板（模板可替换）</a></li><li class="lv3"><a href="#sec13">2. 选来源与模板</a></li><li class="lv3"><a href="#sec14">3. 自动推荐</a></li><li class="lv3"><a href="#sec15">4. 映射矩阵（核心）</a></li><li class="lv3"><a href="#sec16">5. 预演与保存</a></li><li><a href="#sec17">五、模板转换页：生成新表</a></li><li><a href="#sec18">六、数据对比页：核对两个版本</a></li><li><a href="#sec19">七、设置页：工作区、文件、审计</a></li><li><a href="#sec20">八、三个典型工作流</a></li><li class="lv3"><a href="#sec21">场景 1：找一份合同号并当场改掉备注</a></li><li class="lv3"><a href="#sec22">场景 2：把工单明细转成项目台账</a></li><li class="lv3"><a href="#sec23">场景 3：核对两版台账的差异</a></li><li><a href="#sec24">九、数据安全</a></li><li><a href="#sec25">十、常见问题（FAQ）</a></li><li><a href="#sec26">十一、支持格式与限制</a></li><li><a href="#sec27">十二、小技巧</a></li></ul></div><div class="foot">由 docs/*.md 自动生成<br>零依赖 · 可离线打开 · 可打印</div></nav>
+<main>
+<div id="top"></div>
+<h1 class="doc">操作说明（用户手册）</h1>
+<blockquote><p>适用版本：v1.0 ｜ 适用对象：日常用它做表格检索、台账转换、数据核对的业务人员配套文件：<a href="../README.md">README</a>、<a href="03-EXE打包说明.md">EXE 打包说明</a>、<a href="验收报告.md">验收报告</a></p></blockquote>
+<hr>
+<h2 id="sec1">一、启动与关闭</h2>
+<h3 id="sec2">方式 A：EXE 绿色版（推荐）</h3>
+<ol><li>把 <code>表格工具_v1.0_win64.zip</code> 解压到<strong>可写目录</strong>（如 <code>D:\工具\表格工具</code>，别放 <code>C:\Program Files</code>）。</li><li>双击 **<code>表格工具.exe</code>**。程序窗口显示"正在启动服务…"，2–5 秒后自动用默认浏览器打开界面。</li><li>以后要停止：<strong>关闭「表格工具」窗口</strong>（服务随之停止）。想再用，再双击一次。</li></ol>
+<blockquote><p>窗口上三个按钮：<strong>打开界面</strong>（重新开浏览器）、<strong>打开数据目录</strong>（生成物/备份都在这）、<strong>停止并退出</strong>。</p></blockquote>
+<h3 id="sec3">方式 B：源码运行（改代码或没打包时）</h3>
+<p>双击 <code>启动.bat</code>，或命令行 <code>python -m app.server --port 8765</code>。</p>
+<h3 id="sec4">首次使用三步</h3>
+<ol><li>在顶部输入框填入表格所在文件夹，或点 <strong>浏览…</strong> 选目录（会递归扫描子文件夹）；</li><li>点 <strong>切换</strong> → 再点 <strong>重建索引</strong>（首次约 20 秒，66 个表格/25 万单元格实测 18.8 秒）；</li><li>切到「检索」页，输入关键词回车即可。</li></ol>
+<hr>
+<h2 id="sec5">二、界面总览</h2>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>区域</th>
+<th>说明</th>
+</tr></thead><tbody>
+<tr>
+<td>顶栏左</td>
+<td>工作区路径输入框 + <strong>浏览…</strong>（系统文件夹选择框）+ <strong>切换</strong> + <strong>重建索引</strong> + 索引状态（已索引的文件数/单元格数）</td>
+</tr>
+<tr>
+<td>页签</td>
+<td>🔍 检索 ｜ 🧩 字段映射 ｜ 📄 模板转换 ｜ ⚖ 数据对比 ｜ ⚙ 设置</td>
+</tr>
+<tr>
+<td>页面内容</td>
+<td>每个页签一个工作区，互不干扰；切换页签不会丢当前操作</td>
+</tr>
+</tbody></table></div>
+<blockquote><p>地址栏带 <code>#search</code> 这类锚点，刷新后仍停留在当前页；检索页还支持 <code>#search?q=合同</code> 这样的<strong>深链</strong>，可以把一次查询的链接发给同事。</p></blockquote>
+<hr>
+<h2 id="sec6">三、检索页：找数、定位、修改</h2>
+<h3 id="sec7">1. 搜索</h3>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>写法</th>
+<th>含义</th>
+<th>示例</th>
+</tr></thead><tbody>
+<tr>
+<td><code>合同</code></td>
+<td>单关键词，模糊匹配（子串）</td>
+<td>命中所有含"合同"的单元格</td>
+</tr>
+<tr>
+<td><code>示例 设计</code></td>
+<td>多个关键词，<strong>同一行内</strong>都要出现（AND）</td>
+<td>项目名含"示例"且同一行有"设计"</td>
+</tr>
+<tr>
+<td><code>示例 OR 乙</code></td>
+<td>切换下拉为「任一关键词（OR）」</td>
+<td>含任意一个词的行</td>
+</tr>
+<tr>
+<td><code>"设计合同"</code></td>
+<td>英文双引号包起来 = 短语精确匹配</td>
+<td>连续出现"设计合同"</td>
+</tr>
+<tr>
+<td>下拉「全部文件」</td>
+<td>可只搜某个文件；旁边还可按字段过滤</td>
+<td>—</td>
+</tr>
+</tbody></table></div>
+<p>按 <strong>回车</strong> 或点「搜索」。搜索框为空时不会返回全部数据（避免误触）。</p>
+<h3 id="sec8">2. 看懂结果</h3>
+<p>每条结果固定给出 6 个定位信息：<strong>文件地址 ｜ 工作表 ｜ 第几行 ｜ 第几列（字母 + 序号）｜ A1 引用 ｜ 字段名</strong>，命中内容高亮。</p>
+<p>例：<code>第4行 · 第AF列(第32列) · AF4</code>，就是 Excel 里第 4 行、AF 列那个格子。</p>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>操作</th>
+<th>作用</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>打开所在文件夹</strong></td>
+<td>在资源管理器里定位该文件（文件会被选中）</td>
+</tr>
+<tr>
+<td><strong>用 WPS 打开</strong></td>
+<td>用系统默认表格软件打开该文件</td>
+</tr>
+<tr>
+<td><strong>复制路径</strong></td>
+<td>复制完整文件路径到剪贴板</td>
+</tr>
+<tr>
+<td><strong>编辑</strong></td>
+<td>打开单元格弹窗，看当前值/类型/公式，改完「保存并写回」</td>
+</tr>
+<tr>
+<td>底部分页</td>
+<td>每页 50 条，可上一页/下一页/输入页码跳转</td>
+</tr>
+<tr>
+<td><strong>导出结果</strong></td>
+<td>把当前检索结果导成 xlsx（含文件地址/行/列/A1 四列）</td>
+</tr>
+</tbody></table></div>
+<h3 id="sec9">3. 修改单元格（写回）</h3>
+<ol><li>点结果行右侧「编辑」→ 弹窗显示坐标、当前值、单元格类型、是否合并区；</li><li>选择「修改类型」（文本/数值），填「新值」→ <strong>保存并写回</strong>；</li><li>保存成功后该行会标记为已修改；文件被 WPS 打开等外部改动会导致保存被拒（提示冲突），刷新重试即可。</li></ol>
+<p>写回规则：</p>
+<ul><li><strong>写前自动备份</strong>到 <code>data/backup/时间戳/</code>，可还原；</li><li><strong>合并单元格只能改左上角</strong>，改其它位置会提示"合并区，请编辑左上角单元格"；</li><li>公式格可选改「公式」或只改「显示值」；</li><li><code>.xls / .et</code> 老格式<strong>不支持原地修改</strong>，会提示另存为 xlsx。</li></ul>
+<h3 id="sec10">4. 查找替换</h3>
+<ol><li>点「查找替换」；</li><li>填「查找内容」「替换为」（留空 = 删除），可选「区分大小写」；</li><li>点「预演」→ 列表显示每条"旧值 → 新值 + 坐标"；</li><li>勾选要改的条目 → <strong>替换选中项</strong>（同文件一次备份、一次写盘）。</li></ol>
+<hr>
+<h2 id="sec11">四、字段映射页：把别的表转成台账</h2>
+<h3 id="sec12">1. 登记模板（模板可替换）</h3>
+<ol><li>点右上「登记模板」→ 选择任意 <code>.xlsx</code>（台账、统计表都行）；</li><li>系统自动解析多级表头，得到目标字段列表；数据起始行不对时可在模板卡片上调整；</li><li>同一个模板只需登记一次，之后一直可用。</li></ol>
+<h3 id="sec13">2. 选来源与模板</h3>
+<ul><li><strong>来源文件/工作表</strong>：要被转换的表；</li><li><strong>目标模板</strong>：登记过的模板（可切换，换成别的模板也能映射）。</li></ul>
+<h3 id="sec14">3. 自动推荐</h3>
+<p>点「自动推荐」：按字段名、别名词典、类型、相似度给出"来源字段 → 目标字段 + 置信度"，点「全部应用为规则」可一键生成，再手工微调。</p>
+<h3 id="sec15">4. 映射矩阵（核心）</h3>
+<p>每一行一条规则，四个选择器 + 两个模式：</p>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>项</th>
+<th>可选</th>
+<th>含义</th>
+</tr></thead><tbody>
+<tr>
+<td>源行</td>
+<td><code>fixed</code> 固定行 / <code>record</code> 当前记录行+偏移</td>
+<td>取哪一行（record 表示随每条记录下移）</td>
+</tr>
+<tr>
+<td>源列</td>
+<td><code>fixed</code> / <code>header</code> 按字段名 / <code>span</code> 连续 N 列</td>
+<td>取哪一列</td>
+</tr>
+<tr>
+<td>目标行</td>
+<td>同上</td>
+<td>写到模板哪一行</td>
+</tr>
+<tr>
+<td>目标列</td>
+<td>同上</td>
+<td>写到模板哪一列</td>
+</tr>
+<tr>
+<td>模式</td>
+<td><code>cell</code> 逐格 / <code>block</code> 区域块 / <code>transpose</code> <strong>行→列转置</strong> / <code>filldown</code> 合并填充 / <code>repeat</code> 常量重复</td>
+<td>怎么搬运</td>
+</tr>
+<tr>
+<td>转换</td>
+<td><code>identity</code> 原样 / <code>number</code> 数值 / <code>date</code> 日期 / <code>concat</code> 拼接 / <code>constant</code> 常量</td>
+<td>值的加工方式</td>
+</tr>
+</tbody></table></div>
+<p><strong>"A 表某行 → B 表某列"怎么做</strong>：点「+ 区域转置（行→列）」，源行填固定行号（如 3）、源列选 <code>span</code> 起始 2 数量 6，目标行选 <code>span</code> 起始 2 数量 6、目标列填固定列（如 6），模式自动为 <code>transpose</code> —— 即把 A 表第 3 行 B~G 横排的 6 个值，竖排写入目标表 F 列。</p>
+<h3 id="sec16">5. 预演与保存</h3>
+<ul><li>点「预演（逐单元格）」：列出每一格的<strong>来源坐标 → 目标坐标 → 值</strong>，核对无误再生成；</li><li>点「保存方案」，填方案名：以后同类表可直接读取方案（按来源表头指纹还会给出"匹配方案"提示）。</li></ul>
+<hr>
+<h2 id="sec17">五、模板转换页：生成新表</h2>
+<ol><li>选<strong>来源文件</strong>（自动列工作表）、<strong>映射方案</strong>、<strong>目标模板</strong>；</li><li>可改输出文件名（留空自动按"模板名_时间.xlsx"命名）；</li><li>点 <strong>开始转换</strong>：显示进度（读取来源 → 计算映射 → 注入模板 → 自检）；</li><li>成功后点 <strong>下载文件</strong>，或 <strong>打开所在文件夹</strong> 去 <code>data/output/</code> 取；</li><li>生成物<strong>保留模板的原样式、合并单元格、列宽、公式</strong>；生成后会自动重新解析自检，失败不会产出坏文件。</li></ol>
+<blockquote><p>转换不会修改来源表和模板原件。</p></blockquote>
+<hr>
+<h2 id="sec18">六、数据对比页：核对两个版本</h2>
+<ol><li>左侧选<strong>基准表</strong>、右侧选<strong>对照表</strong>（可以是不同文件、不同工作表）；</li><li>指定<strong>主键列</strong>：填 1 基列号（如 <code>AF</code> 或 <code>32</code>；多列用逗号/空格分隔，如 <code>32,33</code>），或直接勾选下方"从表头识别的主键候选"；</li><li>对比选项：</li></ol>
+<ul><li>忽略文本首尾空白（trim）——建议开；</li><li>合并单元格/空值向下填充（filldown）——台账里项目名只写首行时建议开；</li><li>数值容差——如 <code>0.001</code>，避免浮点误差误报。</li></ul>
+<ol><li>点 <strong>开始对比</strong>：</li></ol>
+<ul><li>汇总卡片：匹配 / 新增 / 删除 / 修改（修改按行计）；</li><li>差异表：类型、主键、字段名、左值 + 左文件/行/列/A1、右值 + 右文件/行/列/A1；</li><li><code>added</code> = 仅右表有；<code>removed</code> = 仅左表有；<code>changed</code> = 两边都有但值不同；</li><li>主键为空/重复会以告警列出，不会静默错配。</li></ul>
+<ol><li>点 <strong>导出对比报告</strong> 下载 xlsx（修改黄、仅左红、仅右绿）。</li></ol>
+<hr>
+<h2 id="sec19">七、设置页：工作区、文件、审计</h2>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>区块</th>
+<th>用途</th>
+</tr></thead><tbody>
+<tr>
+<td>工作区</td>
+<td>改目录（可 <strong>浏览…</strong> 选文件夹）、<strong>切换工作区</strong>、<strong>重建索引</strong>（带进度条）、文件数/工作表数/单元格数/索引状态</td>
+</tr>
+<tr>
+<td>文件清单</td>
+<td>每个文件的格式、大小、状态（正常/错误/跳过）、错误原因；可按文件名/格式筛选</td>
+</tr>
+<tr>
+<td>修改审计</td>
+<td>每次写回的时间、文件、坐标、旧值、新值、结果；据此可定位问题</td>
+</tr>
+<tr>
+<td>上方「刷新」</td>
+<td>重新读取状态/文件/审计</td>
+</tr>
+</tbody></table></div>
+<blockquote><p>需要整体回滚某次误操作时：到 <code>data/backup/时间戳/</code> 找到对应文件副本，覆盖回去即可（审计记录里有备份路径）。</p></blockquote>
+<hr>
+<h2 id="sec20">八、三个典型工作流</h2>
+<h3 id="sec21">场景 1：找一份合同号并当场改掉备注</h3>
+<p>检索页搜 <code>DEMO-JQSC-QT</code> → 看结果定位到 <code>第4行 AF4</code> → 点「编辑」→ 改「备注/新值」→ 保存并写回 → 设置页确认审计记录。</p>
+<h3 id="sec22">场景 2：把工单明细转成项目台账</h3>
+<p>字段映射页：登记台账模板 → 选工单表和台账模板 → 自动推荐 → 矩阵里把"工单编号→合同编码""扣分原因→备注"等规则调好（需要横排转竖排时用「区域转置」）→ 预演确认 → 保存方案 → 模板转换页选该方案生成。</p>
+<h3 id="sec23">场景 3：核对两版台账的差异</h3>
+<p>数据对比页：左右各选一份台账 → 主键填 <code>AF</code>（合同编码列）→ 勾选 trim/filldown → 开始对比 → 看差异表左右坐标 → 导出报告发人。</p>
+<hr>
+<h2 id="sec24">九、数据安全</h2>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>机制</th>
+<th>说明</th>
+</tr></thead><tbody>
+<tr>
+<td>只读扫描</td>
+<td>检索/预览/对比只读源文件</td>
+</tr>
+<tr>
+<td>写前备份</td>
+<td>每次写回前整文件复制到 <code>data/backup/时间戳/</code></td>
+</tr>
+<tr>
+<td>写后自检</td>
+<td>重新解析校验目标格=新值、工作表数不变，失败自动回滚</td>
+</tr>
+<tr>
+<td>冲突检测</td>
+<td>文件被外部程序改过（大小/修改时间变化）时拒绝写入</td>
+</tr>
+<tr>
+<td>审计留痕</td>
+<td><code>data/audit/audit_YYYYMMDD.jsonl</code>，记录时间/坐标/旧值/新值/备份路径</td>
+</tr>
+<tr>
+<td>合并保护</td>
+<td>合并区只允许改左上角，防止样式错乱</td>
+</tr>
+</tbody></table></div>
+<hr>
+<h2 id="sec25">十、常见问题（FAQ）</h2>
+<p><strong>Q1：点「打开所在文件夹」弹出 explorer.exe 应用程序错误（0xc0000142）？</strong>新版已修复（改用系统 ShellExecute 打开）。如果仍出现，请升级到最新 <code>表格工具.exe</code>；也可以直接「复制路径」粘到资源管理器地址栏。</p>
+<p><strong>Q2：想选文件夹却没有输入框可选？</strong>顶栏和设置页都有 <strong>浏览…</strong> 按钮，会弹出 Windows 原生"选择文件夹"对话框，选完自动填入并切换工作区。</p>
+<p><strong>Q3：搜索很慢 / 提示未索引？</strong>首次搜索或重建索引需要 20 秒左右（取决于文件数量）。只会在启动后第一次建索引，之后都是毫秒级。文件增删后点「重建索引」。</p>
+<p><strong>Q4：提示"文件已被外部修改，请刷新后重试"？</strong>该文件在索引之后被 WPS/Excel 改过。刷新页面重新搜索，再改一次即可（也可以先关闭占用它的 WPS 窗口）。</p>
+<p><strong>Q5：为什么 .xls 文件不能改？</strong><code>.xls/.et</code> 是老二进制格式，回写风险高，本工具只读不写。用 WPS/Excel 另存为 <code>.xlsx</code> 后再编辑。</p>
+<p><strong>Q6：为什么按钮点了没反应？</strong>确认「表格工具」窗口还开着（服务在运行）；浏览器地址应是 <code>http://127.0.0.1:8765/</code>。若端口被占用，启动器会提示。</p>
+<p><strong>Q7：杀毒软件报风险？</strong>启动器会拉起同目录的 <code>runtime\python.exe</code>，属正常行为；把整个程序目录加入信任区即可。</p>
+<p><strong>Q8：换电脑怎么办？</strong>整个 <code>表格工具</code> 目录拷走即可（自带 Python 运行时）；<code>data/</code> 里是方案、备份、审计，一起拷走更完整。</p>
+<p><strong>Q9：索引里为什么有"错误/跳过"的文件？</strong>加密文件、超大文件（&gt;80 MB）、损坏文件会被跳过，设置页的「文件清单」里有具体原因。</p>
+<hr>
+<h2 id="sec26">十一、支持格式与限制</h2>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>项</th>
+<th>说明</th>
+</tr></thead><tbody>
+<tr>
+<td>可读</td>
+<td><code>.xlsx</code> <code>.xlsm</code> <code>.xlsb</code> <code>.xls</code> <code>.csv</code> <code>.et</code>（按文件真实格式识别，不看扩展名）</td>
+</tr>
+<tr>
+<td>可写回</td>
+<td><code>.xlsx</code> <code>.xlsm</code> <code>.et</code>（zip 型）；<code>.xls</code>/OLE 型 <code>.et</code> 只读</td>
+</tr>
+<tr>
+<td>可导出</td>
+<td>检索结果、对比报告、转换结果均为 <code>.xlsx</code></td>
+</tr>
+<tr>
+<td>规模</td>
+<td>实测 66 个文件 / 25 万单元格，索引 18.8 秒，查询 1 毫秒级（宽泛词 0.5 秒）</td>
+</tr>
+<tr>
+<td>单文件</td>
+<td>&gt; 80 MB 或加密文件跳过</td>
+</tr>
+<tr>
+<td>平台</td>
+<td>Windows 10/11（64 位），监听 <code>127.0.0.1:8765</code>，不对外网开放</td>
+</tr>
+</tbody></table></div>
+<hr>
+<h2 id="sec27">十二、小技巧</h2>
+<ul><li>搜索框回车即搜；多关键词用空格，短语用英文双引号；</li><li>深链分享：地址栏 <code>#search?q=合同</code> 直接把这次查询发给同事；</li><li>结果表「复制路径」可粘贴到任何地方；</li><li>转换/对比的生成物都在 <code>data/output/</code>，文件多时按时间排序取最新；</li><li>映射方案保存后，同类表会提示"匹配方案"，省得重配。</li></ul>
+</main>
+</body>
+</html>

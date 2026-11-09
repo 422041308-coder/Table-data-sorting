@@ -1,0 +1,282 @@
+FILE: <repo>\samples\项目台账统计表.xlsx
+SHEETS: ['2024年项目台账（自筹-甲代-施工-日常经营）', 'Sheet1']
+====================================================================================================
+SHEET: '2024年项目台账（自筹-甲代-施工-日常经营）'  max_row=63 max_col=58
+MERGED: ['AP2:AS2', 'BD2:BD3', 'X2:AB2', 'B2:B3', 'D2:D3', 'AZ2:BC2', 'F2:F3', 'C4:C7', 'AE2:AL2', 'AX2:AY2', 'A2:A3', 'C2:C3', 'E2:E3', 'BE2:BE3', 'AM2:AO2', 'A4:A7', 'BF2:BF3', 'A1:BF1', 'B4:B7', 'AC2:AD2', 'AT2:AU2', 'AL4:AL7', 'H2:W2', 'G2:G3']
+FREEZE: AS4  FILTER: None
+-- cell-by-cell, first 10 rows --
+A1 [str] = '2024年示例区示例公司项目台账（单位：元）'
+A2 [str] = '序号'
+B2 [str] = '项目名称'
+C2 [str] = '资金来源（自筹/代建/施工/日常经营）'
+D2 [str] = '合同名称'
+E2 [str] = '委托单位/甲方（插入评论合同编码）'
+F2 [str] = '政府投资总额/代建管理费/施工总承包费（元）'
+G2 [str] = '代建/甲方合同上传'
+H2 [str] = '计划部前期相关资料'
+X2 [str] = '乙方中标单位'
+AC2 [str] = '乙方中标金额'
+AE2 [str] = '合同签订情况'
+AM2 [str] = '审计报告'
+AP2 [str] = '乙方合同结算单'
+AT2 [str] = '乙方已付款金额'
+AV2 [str] = '未付款金额（元）'
+AW2 [str] = '未付款金额（元）'
+AX2 [str] = '乙方发票情况'
+AZ2 [str] = '项目资料情况'
+BD2 [str] = '公司项目负责人'
+BE2 [str] = '实施部门'
+BF2 [str] = '备注'
+H3 [str] = '项目决策部门'
+I3 [str] = '项目决策时间'
+J3 [str] = '决策文件上传（会议纪要、决策部门文件、国资委等文件）'
+K3 [str] = '可研时间'
+L3 [str] = '可研（初设）上传资料'
+M3 [str] = '项目立项文件上传（备案）'
+N3 [str] = '代理公司'
+O3 [str] = '代理合同时间'
+P3 [str] = '代理协议资料上传'
+Q3 [str] = '招标控制价编制单位'
+R3 [str] = '招标控制价编制时间'
+S3 [str] = '招标控制价编制单位合同上传'
+T3 [str] = '招标控制价（元）'
+U3 [str] = '招标控制价文件上传（工程量清单+控制价）'
+V3 [str] = '招标方式'
+W3 [str] = '招标类型/标段（设计/施工/监理/审计）'
+X3 [str] = '中标单位名称'
+Y3 [str] = '中标时间'
+Z3 [str] = '中标通知书资料上传'
+AA3 [str] = '负责人'
+AB3 [str] = '联系电话'
+AC3 [str] = '含税金额（元）'
+AD3 [str] = '税率\n（%）'
+AE3 [str] = '签订状态'
+AF3 [str] = '合同编码'
+AG3 [str] = '签订时间'
+AH3 [str] = '计划开工时间'
+AI3 [str] = '计划竣工时间'
+AJ3 [str] = '合同扫描件上传（合同）无资料插入说明'
+AK3 [str] = '经办人'
+AL3 [str] = '存放位置'
+AM3 [str] = '进度小计'
+AN3 [str] = '最终'
+AO3 [str] = '审计报告文件上传（只上传前几页）'
+AP3 [str] = '中期小计'
+AQ3 [str] = '最终'
+AR3 [str] = '质保金、农民工保证民返还'
+AS3 [str] = '结算资料上传'
+AT3 [str] = '金额小计'
+AU3 [str] = '资料转交财务时间'
+AV3 [str] = '（有审计小计未付款=审计小计-已付款)'
+AW3 [str] = '（有审计小计未付款=合同金额-已付款)'
+AX3 [str] = '发票金额'
+AY3 [str] = '发票上传'
+AZ3 [str] = '实际开工时间'
+BA3 [str] = '实际竣工时间'
+BB3 [str] = '开竣工报告上传'
+BC3 [str] = '项目资料是否齐全及资料存放位置）'
+A4 [int] = 1
+B4 [str] = '示例项目甲—园区改造工程'
+C4 [str] = '企业自筹'
+D4 [str] = '示例项目甲—园区改造工程设计进工程建设工程设计合同'
+T4 [int] = 55000
+V4 [str] = '询价'
+W4 [str] = '设计类'
+X4 [str] = '示例设计院'
+Y4 [str] = '2024.3.9'
+AA4 [str] = '孙八'
+AB4 [str] = '13800000001'
+AC4 [int] = 52800
+AD4 [float] = 0.06
+AE4 [str] = '已签订'
+AF4 [str] = 'DEMO-ZS-24001'
+AG4 [str] = '2024.3.15'
+AK4 [str] = '张三'
+AL4 [str] = '2024自筹甲代'
+AT4 [int] = 52800
+AU4 [str] = '2024.7.26李四 2025.1.27李四'
+AV4 [ArrayFormula] = <openpyxl.worksheet.formula.ArrayFormula object at 0x0000020A4841F230>
+BE4 [str] = '工程部'
+D5 [str] = '示例项目甲—园区改造工程'
+W5 [str] = '施工类'
+X5 [str] = '示例建筑公司'
+AA5 [str] = '周九'
+AB5 [str] = '13800000002'
+AC5 [int] = 2788335
+AD5 [float] = 0.09
+AE5 [str] = '已签订'
+AF5 [str] = 'DEMO-JS-24002'
+AG5 [str] = '2024.3.26'
+AK5 [str] = '张三'
+AN5 [int] = 2495529
+AQ5 [str] = '=2495529*0.9'
+AT5 [int] = 0
+AV5 [ArrayFormula] = <openpyxl.worksheet.formula.ArrayFormula object at 0x0000020A483ECC80>
+BE5 [str] = '计划统筹部'
+D6 [str] = '示例项目甲—园区改造工程建设工程监理合同'
+W6 [str] = '监理类'
+X6 [str] = '示例咨询公司'
+AA6 [str] = '吴十'
+AB6 [int] = 13800000003
+AC6 [int] = 27883
+AD6 [float] = 0.06
+AE6 [str] = '已签订'
+AF6 [str] = 'DEMO-JL-24003'
+AG6 [str] = '2024.3.26'
+AK6 [str] = '王五'
+AT6 [int] = 27883
+AU6 [str] = '2026.2.14李四'
+AV6 [ArrayFormula] = <openpyxl.worksheet.formula.ArrayFormula object at 0x0000020A483EE600>
+D7 [str] = '示例项目甲—园区改造工程建设工程建设工程造价咨询合同'
+W7 [str] = '审计类'
+X7 [str] = '示例审计公司'
+AA7 [str] = '钱七'
+AB7 [int] = 13800000004
+AC7 [int] = 16730
+AD7 [float] = 0.01
+AE7 [str] = '已签订'
+AF7 [str] = 'DEMO-ZX-24004'
+AG7 [str] = '2024.3.27'
+AK7 [str] = '赵六'
+AT7 [int] = 0
+AV7 [ArrayFormula] = <openpyxl.worksheet.formula.ArrayFormula object at 0x0000020A483EF4A0>
+B8 [str] = '小计'
+AC8 [str] = '=SUM(AC4:INDEX(AC:AC,ROW()-1))'
+AM8 [str] = '=SUM(AM4:INDEX(AM:AM,ROW()-1))'
+AN8 [str] = '=SUM(AN4:INDEX(AN:AN,ROW()-1))'
+AP8 [str] = '=SUM(AP4:INDEX(AP:AP,ROW()-1))'
+AQ8 [str] = '=SUM(AQ4:INDEX(AQ:AQ,ROW()-1))'
+AR8 [str] = '=SUM(AR4:INDEX(AR:AR,ROW()-1))'
+AT8 [str] = '=SUM(AT4:INDEX(AT:AT,ROW()-1))'
+AV8 [str] = '=SUM(AV4:INDEX(AV:AV,ROW()-1))'
+B9 [str] = '乙南侧环境整治工程项目'
+C9 [str] = '甲方代建'
+B10 [str] = '示例项目丙—土方清运'
+C10 [str] = '施工类'
+-- column -> header labels row2/row3 --
+A: r2='序号' r3=None
+B: r2='项目名称' r3=None
+C: r2='资金来源（自筹/代建/施工/日常经营）' r3=None
+D: r2='合同名称' r3=None
+E: r2='委托单位/甲方（插入评论合同编码）' r3=None
+F: r2='政府投资总额/代建管理费/施工总承包费（元）' r3=None
+G: r2='代建/甲方合同上传' r3=None
+H: r2='计划部前期相关资料' r3='项目决策部门'
+I: r2=None r3='项目决策时间'
+J: r2=None r3='决策文件上传（会议纪要、决策部门文件、国资委等文件）'
+K: r2=None r3='可研时间'
+L: r2=None r3='可研（初设）上传资料'
+M: r2=None r3='项目立项文件上传（备案）'
+N: r2=None r3='代理公司'
+O: r2=None r3='代理合同时间'
+P: r2=None r3='代理协议资料上传'
+Q: r2=None r3='招标控制价编制单位'
+R: r2=None r3='招标控制价编制时间'
+S: r2=None r3='招标控制价编制单位合同上传'
+T: r2=None r3='招标控制价（元）'
+U: r2=None r3='招标控制价文件上传（工程量清单+控制价）'
+V: r2=None r3='招标方式'
+W: r2=None r3='招标类型/标段（设计/施工/监理/审计）'
+X: r2='乙方中标单位' r3='中标单位名称'
+Y: r2=None r3='中标时间'
+Z: r2=None r3='中标通知书资料上传'
+AA: r2=None r3='负责人'
+AB: r2=None r3='联系电话'
+AC: r2='乙方中标金额' r3='含税金额（元）'
+AD: r2=None r3='税率\n（%）'
+AE: r2='合同签订情况' r3='签订状态'
+AF: r2=None r3='合同编码'
+AG: r2=None r3='签订时间'
+AH: r2=None r3='计划开工时间'
+AI: r2=None r3='计划竣工时间'
+AJ: r2=None r3='合同扫描件上传（合同）无资料插入说明'
+AK: r2=None r3='经办人'
+AL: r2=None r3='存放位置'
+AM: r2='审计报告' r3='进度小计'
+AN: r2=None r3='最终'
+AO: r2=None r3='审计报告文件上传（只上传前几页）'
+AP: r2='乙方合同结算单' r3='中期小计'
+AQ: r2=None r3='最终'
+AR: r2=None r3='质保金、农民工保证民返还'
+AS: r2=None r3='结算资料上传'
+AT: r2='乙方已付款金额' r3='金额小计'
+AU: r2=None r3='资料转交财务时间'
+AV: r2='未付款金额（元）' r3='（有审计小计未付款=审计小计-已付款)'
+AW: r2='未付款金额（元）' r3='（有审计小计未付款=合同金额-已付款)'
+AX: r2='乙方发票情况' r3='发票金额'
+AY: r2=None r3='发票上传'
+AZ: r2='项目资料情况' r3='实际开工时间'
+BA: r2=None r3='实际竣工时间'
+BB: r2=None r3='开竣工报告上传'
+BC: r2=None r3='项目资料是否齐全及资料存放位置）'
+BD: r2='公司项目负责人' r3=None
+BE: r2='实施部门' r3=None
+BF: r2='备注' r3=None
+-- data row 4 raw --
+A4 = 1
+B4 = '示例项目甲—园区改造工程'
+C4 = '企业自筹'
+D4 = '示例项目甲—园区改造工程设计进工程建设工程设计合同'
+E4 = None
+F4 = None
+G4 = None
+H4 = None
+I4 = None
+J4 = None
+K4 = None
+L4 = None
+M4 = None
+N4 = None
+O4 = None
+P4 = None
+Q4 = None
+R4 = None
+S4 = None
+T4 = 55000
+U4 = None
+V4 = '询价'
+W4 = '设计类'
+X4 = '示例设计院'
+Y4 = '2024.3.9'
+Z4 = None
+AA4 = '孙八'
+AB4 = '13800000001'
+AC4 = 52800
+AD4 = 0.06
+AE4 = '已签订'
+AF4 = 'DEMO-ZS-24001'
+AG4 = '2024.3.15'
+AH4 = None
+AI4 = None
+AJ4 = None
+AK4 = '张三'
+AL4 = '2024自筹甲代'
+AM4 = None
+AN4 = None
+AO4 = None
+AP4 = None
+AQ4 = None
+AR4 = None
+AS4 = None
+AT4 = 52800
+AU4 = '2024.7.26李四 2025.1.27李四'
+AV4 = <openpyxl.worksheet.formula.ArrayFormula object at 0x0000020A4841F230>
+AW4 = None
+AX4 = None
+AY4 = None
+AZ4 = None
+BA4 = None
+BB4 = None
+BC4 = None
+BD4 = None
+BE4 = '工程部'
+BF4 = None
+====================================================================================================
+SHEET: 'Sheet1'  max_row=1 max_col=1
+MERGED: []
+FREEZE: None  FILTER: None
+-- cell-by-cell, first 10 rows --
+-- column -> header labels row2/row3 --
+A: r2=None r3=None
+-- data row 4 raw --
+A4 = None

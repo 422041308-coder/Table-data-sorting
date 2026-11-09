@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>表格检索 · 模板改造 · 数据核对</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">▦</span>
+      <span>表格工具</span>
+      <small>检索 · 映射 · 对比</small>
+    </div>
+    <div class="wsbar">
+      <input id="ws-root" type="text" spellcheck="false" placeholder="目标文件夹（递归扫描），例如 C:\Users\...\msg\file">
+      <button id="ws-browse" class="btn ghost">浏览…</button>
+      <button id="ws-apply" class="btn">切换</button>
+      <button id="ws-refresh" class="btn ghost">重建索引</button>
+      <span id="index-state" class="state">未索引</span>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-page="search" class="tab active">🔍 检索</button>
+    <button data-page="mapping" class="tab">🧩 字段映射</button>
+    <button data-page="convert" class="tab">📄 模板转换</button>
+    <button data-page="compare" class="tab">⚖ 数据对比</button>
+    <button data-page="settings" class="tab">⚙ 设置</button>
+  </nav>
+
+  <main id="app" class="view"></main>
+  <div id="toast" class="toast" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

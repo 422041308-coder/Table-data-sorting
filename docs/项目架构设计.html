@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>表格检索 / 模板改造 / 数据核对 —— 项目架构设计</title>
+<style>
+:root{
+  --ink:#1f2937; --muted:#64748b; --line:#e2e8f0; --accent:#4f46e5;
+  --accent2:#0ea5e9; --warn:#b45309; --bg:#f6f8fb; --card:#ffffff;
+  --code-bg:#f1f5f9; --th:#eef2f7;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:15px/1.75 "Microsoft YaHei","PingFang SC","Segoe UI",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* layout */
+#toc{
+  position:fixed;left:0;top:0;bottom:0;width:288px;overflow:auto;
+  background:#0f172a;color:#cbd5e1;padding:26px 20px 40px;
+}
+#toc .brand{font-size:16px;font-weight:700;color:#fff;letter-spacing:.5px}
+#toc .brand small{display:block;font-size:11.5px;font-weight:400;color:#7c8aa5;margin-top:5px;letter-spacing:0}
+#toc .grp{margin-top:22px}
+#toc .grp>a{display:block;font-size:12px;font-weight:700;color:#93a4c4;text-transform:none;
+  padding:4px 0 6px;border-bottom:1px solid #1e2a44;margin-bottom:6px}
+#toc ul{list-style:none;margin:0;padding:0}
+#toc li a{display:block;color:#b6c2d6;font-size:12.8px;line-height:1.55;
+  padding:3px 8px;border-radius:6px;border-left:2px solid transparent}
+#toc li a:hover{background:#1b2740;color:#fff;text-decoration:none}
+#toc li.lv3 a{padding-left:20px;color:#8fa0bd;font-size:12.2px}
+#toc .foot{margin-top:28px;font-size:11px;color:#5d6b85;line-height:1.7}
+
+main{margin-left:288px;padding:34px 46px 90px;max-width:1180px}
+.hero{
+  background:linear-gradient(120deg,#eef2ff 0%,#e0f2fe 100%);
+  border:1px solid #dbe4f0;border-radius:16px;padding:26px 30px;margin-bottom:30px;
+}
+.hero h1{margin:0 0 6px;font-size:25px;letter-spacing:.3px}
+.hero p{margin:0;color:#475569;font-size:13.5px}
+.kpis{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.kpi{background:#fff;border:1px solid #dbe4f0;border-radius:11px;padding:9px 14px;min-width:118px}
+.kpi b{display:block;font-size:19px;color:var(--accent);line-height:1.25}
+.kpi span{font-size:11.5px;color:var(--muted)}
+
+h1.doc{font-size:22px;margin:46px 0 10px;padding:8px 0 12px;border-bottom:2px solid var(--accent);letter-spacing:.3px}
+h2{font-size:19px;margin:44px 0 14px;padding-left:11px;border-left:4px solid var(--accent);letter-spacing:.2px}
+h3{font-size:15.5px;margin:28px 0 10px;color:#334155;padding-left:9px;border-left:3px solid #c7d2fe}
+h4{font-size:14px;margin:20px 0 8px;color:#334155}
+p{margin:10px 0}
+strong{color:#111827}
+
+/* tables */
+.tablewrap{overflow-x:auto;margin:14px 0 18px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:13.2px;line-height:1.62}
+th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;overflow-wrap:break-word}
+th:last-child,td:last-child{border-right:none}
+tr:last-child td{border-bottom:none}
+th{background:var(--th);font-weight:700;color:#334155;white-space:nowrap}
+tbody tr:nth-child(even){background:#fbfcfe}
+td code,th code{white-space:nowrap}
+
+/* code */
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:15px 17px;
+  overflow-x:auto;margin:14px 0;font-size:12.8px;line-height:1.72}
+pre code{font-family:"Cascadia Mono",Consolas,"Courier New",monospace;white-space:pre;color:#1e293b}
+p code,li code,td code,blockquote code{background:#eef2f7;border:1px solid #e2e8f0;border-radius:5px;
+  padding:1px 5px;font-family:"Cascadia Mono",Consolas,monospace;font-size:12.3px;color:#0f172a}
+blockquote{margin:14px 0;padding:11px 16px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:0 8px 8px 0;color:#78350f;font-size:13.6px}
+blockquote p{margin:0}
+ul,ol{margin:10px 0;padding-left:24px}
+li{margin:5px 0}
+hr{border:none;border-top:1px dashed #cbd5e1;margin:34px 0}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px;margin:14px 0;display:block;box-shadow:0 2px 10px rgba(15,23,42,.06)}
+
+/* architecture diagram */
+.arch{margin:18px 0 8px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:18px 18px 12px}
+.arch .layer{display:flex;gap:14px;align-items:stretch;border-radius:10px;padding:12px 15px;margin-bottom:0}
+.arch .layer+.arrow{text-align:center;color:#94a3b8;font-size:15px;line-height:1.4;margin:2px 0}
+.arch .lt{flex:0 0 132px;font-weight:700;font-size:13.5px;color:#fff;border-radius:8px;padding:5px 10px;display:flex;align-items:center;justify-content:center;text-align:center}
+.arch .lc{flex:1;min-width:0}
+.arch .lc .head{font-weight:700;font-size:13.5px;margin-bottom:6px;color:#1e293b}
+.arch .chips{display:flex;flex-wrap:wrap;gap:6px}
+.arch .chip{background:#fff;border:1px solid #dbe4f0;border-radius:7px;padding:3px 9px;font-size:11.8px;color:#334155;white-space:nowrap}
+.arch .chip.key{border-color:#c7d2fe;background:#eef2ff;color:#3730a3;font-weight:700}
+.l1 .lt{background:#6d28d9}.l1{background:#f5f3ff;border:1px solid #ede9fe}
+.l2 .lt{background:#4f46e5}.l2{background:#eef2ff;border:1px solid #e0e7ff}
+.l3 .lt{background:#0284c7}.l3{background:#eff6ff;border:1px solid #dbeafe}
+.l4 .lt{background:#0d9488}.l4{background:#f0fdfa;border:1px solid #ccfbf1}
+.l5 .lt{background:#b45309}.l5{background:#fffbeb;border:1px solid #fef3c7}
+.arch .io{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1}
+.arch .io .box{flex:1;min-width:230px;border:1px dashed #cbd5e1;border-radius:9px;padding:8px 12px;background:#f8fafc;font-size:12.4px;color:#475569}
+.arch .io .box b{color:#1e293b}
+.legend{font-size:11.8px;color:var(--muted);margin:6px 0 0}
+.tag{display:inline-block;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:20px;
+  font-size:11px;padding:1px 9px;margin-right:6px;vertical-align:1px}
+
+@media (max-width:1100px){
+  #toc{position:static;width:auto;height:auto}
+  main{margin-left:0;padding:22px 18px 70px}
+  .arch .layer{flex-direction:column}
+  .arch .lt{flex:none}
+}
+@media print{
+  #toc{display:none}
+  main{margin:0;max-width:none;padding:0}
+  body{background:#fff}
+  .hero{background:#fff}
+  h2{page-break-after:avoid}
+  .tablewrap,pre,.arch{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<nav id="toc"><div class="brand">表格检索 / 模板改造 / 数据核对 —— 项目架构设计<small>脱敏示例版 · 2026-11</small></div><div class="grp"><a href="#top">表格检索 / 模板改造 / 数据核对 Web 应用 —— 需求整合与项目架构</a><ul><li><a href="#sec1">一、需求整合</a></li><li class="lv3"><a href="#sec2">1.1 业务背景</a></li><li class="lv3"><a href="#sec3">1.2 需求条目（原始表述 → 可验收需求）</a></li><li class="lv3"><a href="#sec4">1.3 隐含需求（从样本数据反推，用户未明说但必须做）</a></li><li class="lv3"><a href="#sec5">1.4 非功能需求</a></li><li><a href="#sec6">二、项目架构</a></li><li class="lv3"><a href="#sec7">2.1 总体结构（零依赖分层）</a></li><li class="lv3"><a href="#sec8">2.2 关键设计决策</a></li><li class="lv3"><a href="#sec9">2.3 统一数据模型（契约，`app/core/model.py`）</a></li><li class="lv3"><a href="#sec10">2.4 HTTP API（v1，全部 JSON）</a></li><li class="lv3"><a href="#sec11">2.5 目录结构</a></li><li class="lv3"><a href="#sec12">2.6 关键技术流程</a></li><li class="lv3"><a href="#sec13">2.7 前端设计（小体积）</a></li><li class="lv3"><a href="#sec14">2.8 风险与对策</a></li><li><a href="#sec15">三、已确认的决策（2026-11-09）</a></li><li><a href="#sec16">四、验收清单（v1）</a></li><li><a href="#sec17">五、实现状态（2026-11-09 交付）</a></li></ul></div><div class="grp"><a href="#top">开发需求评估与"切片"方案</a><ul><li><a href="#sec1001">一、评估方法</a></li><li class="lv3"><a href="#sec1002">1.1 能力域评估</a></li><li class="lv3"><a href="#sec1003">1.2 已消除的最大不确定性（探针结论）</a></li><li><a href="#sec1004">二、切片结论</a></li><li class="lv3"><a href="#sec1005">2.1 切片总表</a></li><li class="lv3"><a href="#sec1006">2.2 并行执行计划</a></li><li class="lv3"><a href="#sec1007">2.3 写作用域与冲突规避</a></li><li class="lv3"><a href="#sec1008">2.4 不建议切片的部分（必须串行）</a></li><li><a href="#sec1009">三、质量门与测试策略</a></li><li><a href="#sec1010">四、时间与资源估算</a></li><li><a href="#sec1011">五、切片决策记录（TL;DR）</a></li></ul></div><div class="foot">由 docs/*.md 自动生成<br>零依赖 · 可离线打开 · 可打印</div></nav>
+<main>
+<div id="top"></div>
+<h1 class="doc">表格检索 / 模板改造 / 数据核对 Web 应用 —— 需求整合与项目架构</h1>
+<ul><li>版本：v1.0（需求整合稿）</li><li>日期：2026-11-09</li><li>样本：<code>samples/项目台账统计表.xlsx</code>（用户提供样板，58 列 / 两级合并表头）</li><li>素材实测：微信接收目录 <code>...\msg\file</code> 下共 65 个表格文件、29.3 MB，格式分布 <strong>.xls 32 / .xlsx 30 / .csv 1 / .et 2</strong></li></ul>
+<hr>
+<h2 id="sec1">一、需求整合</h2>
+<h3 id="sec2">1.1 业务背景</h3>
+<p>用户日常在两套数据之间工作：</p>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>数据</th>
+<th>特征</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>项目台账统计表</strong>（模板）</td>
+<td>单表 58 列，两级合并表头（2~3 行），含"小计"行、公式与数组公式，是唯一的"标准形态"</td>
+</tr>
+<tr>
+<td><strong>各类过程表</strong>（来源）</td>
+<td>12345 工单导出、扣分明细、超期预警、固定资产台账等，来自系统导出或人工填报，列名/顺序/表头层级各不相同，且 <strong>.xls 占一半以上</strong></td>
+</tr>
+</tbody></table></div>
+<p>痛点：要在几十个表格里找一个数/一个合同号，只能逐个打开；来源表要汇总进台账，全靠手工复制粘贴；两个版本核对差异，靠肉眼比对。</p>
+<h3 id="sec3">1.2 需求条目（原始表述 → 可验收需求）</h3>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>编号</th>
+<th>用户原话</th>
+<th>转化后的需求</th>
+<th>验收口径</th>
+</tr></thead><tbody>
+<tr>
+<td>R1</td>
+<td>"针对目标文件夹内的所有表格（excel 支持的所有类型）要做全字段模糊搜索"</td>
+<td>递归扫描指定文件夹，对<strong>每个工作表、每个单元格</strong>建立可检索文本；支持关键词/多关键词/短语模糊匹配；结果定位到"文件—工作表—行—列（字段名）"；关键词高亮；结果可导出</td>
+<td>语料中任一单元格的可见内容 100% 可被搜到；单元测试 + 抽样人工验证</td>
+</tr>
+<tr>
+<td>R2</td>
+<td>"表格样式的转换（字段映射）"；补充："<strong>模板要求可以替换</strong>，但映射内容<strong>行列需要可以自行选择调整</strong>，也就是说有需要把 A 表某行经转换填写入 B 表某列的可能"</td>
+<td><strong>① 模板可替换</strong>：任意 xlsx 都能登记为模板（框选"目标数据起始单元格"即可），不写死台账那 58 列；<strong>② 映射以坐标为单位</strong>：源（行, 列）→ 目标（行, 列）均可自由指定，记录行可自动下移、固定行可写常量；<strong>③ 方向不止列→列</strong>：列→列、<strong>行→列（转置）</strong>、列→行、单元格→单元格、区域块→区域块都支持；<strong>④</strong> 自动推荐 + 人工调整 + 方案保存复用；<strong>⑤</strong> 输出保留模板原有样式/合并/列宽/公式</td>
+<td>①换任意模板也能用；②"A 表第 3 行（横向的字段名→值）→ B 表第 F 列（竖向排列）"能正确生成；③输出在 WPS 打开无修复提示、样式一致；④转置/区域映射提供逐单元格预览</td>
+</tr>
+<tr>
+<td>R3</td>
+<td>"两表格对应条目的数据对比"</td>
+<td>选取两张表（可为不同文件/工作表），指定主键（自动推荐唯一列），按主键匹配条目；输出 新增 / 删除 / 修改 三类差异，字段级逐项展示；<strong>每条差异也必须带坐标</strong>（左/右两侧各自的文件地址、工作表、第几行、第几列/A1）；可导出带标注的对比报告</td>
+<td>对同一台账的两个版本，差异结果与人工核对一致；主键重复/缺失有明确提示而非静默错配；任取一条差异，能直接定位到左右两侧各自的文件与行列</td>
+</tr>
+<tr>
+<td>R4</td>
+<td>"小体积有简单的图形操作界面可以为 web 应用"</td>
+<td>本地一键启动，浏览器打开即用；中文界面；五个功能页签；无需安装 Node/数据库</td>
+<td>双击启动脚本 → 自动打开浏览器 → 页面可用；代码总量 &lt; 1 MB；零第三方依赖</td>
+</tr>
+<tr>
+<td><strong>R5</strong></td>
+<td>"给出的结果需要为文件地址、第几行第几列"</td>
+<td>每条命中必须是一份<strong>可复现的坐标</strong>：文件绝对路径 + 工作表名 + Excel 行号（与左侧行标一致，从 1 起）+ 列字母与列序号（如 <code>AF</code> / 第 32 列）+ A1 引用（<code>AF12</code>）+ 该列表头字段名；并支持一键"打开所在文件夹 / 用 WPS 打开该文件"</td>
+<td>任取一条结果，不看界面也能定位到"哪个文件、哪个表、第几行第几列、哪个字段"；界面、导出文件、审计日志三处的坐标口径完全一致</td>
+</tr>
+<tr>
+<td><strong>R6</strong></td>
+<td>"且可以通过应用进行修改"</td>
+<td>在检索结果、预览表、单元格详情中<strong>直接编辑并写回原文件</strong>；写前自动备份、支持撤销；文件被外部程序改过时保存前做冲突检测；每次修改留审计日志（时间/文件/坐标/旧值/新值）；合并单元格只写左上角、公式格区分"改公式"与"改显示值"</td>
+<td>修改后 WPS/Excel 打开无"修复"提示；未涉及的工作表、样式、公式保持不变；备份可一键还原；被外部改动时有明确告警而非静默覆盖</td>
+</tr>
+</tbody></table></div>
+<h3 id="sec4">1.3 隐含需求（从样本数据反推，用户未明说但必须做）</h3>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>编号</th>
+<th>事实（实测）</th>
+<th>对系统的要求</th>
+</tr></thead><tbody>
+<tr>
+<td>N1</td>
+<td>台账表头是 <strong>2 行 × 58 列、22 处合并</strong>（如 <code>H2:W2</code>=计划部前期相关资料，其下 16 个子列）</td>
+<td>表头识别必须支持多级合并，字段名要拼成路径："计划部前期相关资料 / 项目决策时间"</td>
+</tr>
+<tr>
+<td>N2</td>
+<td>表中存在 <strong>小计行</strong>（第 8 行 <code>B8=小计</code>，含 <code>SUM(AC4:INDEX(AC:AC,ROW()-1))</code> 等公式），第 9~11 行还只是"分类占位行"</td>
+<td>检索需覆盖，但<strong>字段映射/对比/汇总必须排除</strong>小计与占位行，否则数据翻倍</td>
+</tr>
+<tr>
+<td>N3</td>
+<td>同一项目跨多行（第 4~7 行属同一"示例双创"项目），项目名只在首行出现（视觉靠合并）</td>
+<td>对比/映射时需支持"向下填充"类合并语义的补全策略，否则主键匹配会漏</td>
+</tr>
+<tr>
+<td>N4</td>
+<td>单元格类型混杂：手机号存成数字 <code>13800000003</code>、日期存成文本 <code>2024.3.9</code>、税率存成小数 <code>0.06</code> 显示为 6%、<code>AV</code> 列是<strong>数组公式</strong></td>
+<td>归一化层要按"目标字段类型"做转换；浮点/科学计数绝对不能当文本搜</td>
+</tr>
+<tr>
+<td>N5</td>
+<td>一个目录里同名文件带 <code>(1)</code> 副本（如 <code>示例预警.xls</code>、<code>示例台账-修改.xlsx</code> 成对出现）</td>
+<td>检索结果要能区分文件版本（显示修改时间），对比功能正好用于核对这种"改前/改后"</td>
+</tr>
+<tr>
+<td>N6</td>
+<td><code>.xls</code> 是 OLE2/BIFF8 老格式（实测魔数 <code>d0cf11e0</code>），<code>.et</code> 两种都有（一个 zip、一个 OLE2）</td>
+<td><strong>按文件魔数识别格式，不按扩展名</strong>；.xls 必须原生可读</td>
+</tr>
+<tr>
+<td>N7</td>
+<td>目标机 <strong>无网络、无 xlrd、无 LibreOffice</strong>（实测 pip 不可用）</td>
+<td>不能引入任何需要联网安装的依赖；解析器自研</td>
+</tr>
+<tr>
+<td>N8</td>
+<td>最大单文件 9.4 MB（<code>示例台账.xlsx</code>），总语料 29 MB</td>
+<td>读取用流式解析，索引常驻内存可控在 ~200 MB 内</td>
+</tr>
+<tr>
+<td>N9</td>
+<td>写回比读取危险一个数量级：一个格子可能落在 <code>&lt;c&gt;</code> 节点 + 共享字符串 + 样式索引三处；合并区只有左上角存值；公式格有"公式"和"缓存值"两套内容</td>
+<td>写回层必须走"定位原始节点 → 最小改动"路线，禁止整表重写；每次写前备份，写后自检（重开校验）</td>
+</tr>
+<tr>
+<td>N10</td>
+<td>台账模板只是<strong>当前样板</strong>：业务上年度/口径变了模板就会换，"58 字段"不能写死在代码里</td>
+<td>模板必须可登记、可替换：字段列表与"目标数据起始单元格"由模板解析 + 用户框选，映射方案与模板解耦</td>
+</tr>
+<tr>
+<td>N11</td>
+<td>"A 表某行 → B 表某列"说明映射<strong>不是</strong>字段一对一：横向排列的"字段名—值"要变成纵向排列，甚至整块区域互换方向</td>
+<td>映射模型必须支持方向与区域：列→列、<strong>行→列（转置）</strong>、列→行、单元格→单元格、区域块→区域块；否则这类表只能回 Excel 手工做</td>
+</tr>
+</tbody></table></div>
+<h3 id="sec5">1.4 非功能需求</h3>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>项</th>
+<th>指标</th>
+</tr></thead><tbody>
+<tr>
+<td>部署</td>
+<td>Windows 10/11 单机；仅需 Python 3.10+；<code>启动.bat</code> 一键运行；监听 <code>127.0.0.1</code>，不对外网开放</td>
+</tr>
+<tr>
+<td>体积</td>
+<td>应用代码 &lt; 1 MB；第三方依赖 0 个；不打包 Python 运行时</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>65 文件/29 MB 语料首次索引 &lt; 60 s；增量刷新按 mtime 跳过；单次搜索 p95 &lt; 300 ms；打开 9 MB 工作簿预览 &lt; 3 s；单单元格写回 &lt; 300 ms</td>
+</tr>
+<tr>
+<td>数据安全</td>
+<td>读取一律只读；<strong>写回前必须备份</strong>到 <code>data/backup/{时间戳}/</code>，原件可一键还原；写后校验文件可被重新解析；审计日志不可静默丢弃</td>
+</tr>
+<tr>
+<td>并发安全</td>
+<td>写回前比对 <code>(大小, 修改时间)</code>，与索引时不一致则拒绝并提示"文件已被外部修改"</td>
+</tr>
+<tr>
+<td>兼容</td>
+<td>读取：xlsx / xlsm / xlsb / xls / csv / et（按魔数）；输出与写回：xlsx / xlsm / et(zip) 原地写回；xls / et(OLE2) 一期另存 xlsx 副本（见 D10）</td>
+</tr>
+<tr>
+<td>可维护</td>
+<td>层间只依赖数据模型契约；每个解析器有独立单测；新增格式只需实现一个适配器</td>
+</tr>
+</tbody></table></div>
+<hr>
+<h2 id="sec6">二、项目架构</h2>
+<h3 id="sec7">2.1 总体结构（零依赖分层）</h3>
+
+<div class="arch">
+  <div class="layer l1">
+    <div class="lt">表现层</div>
+    <div class="lc">
+      <div class="head">原生 HTML + CSS + ES Module 单页（无框架、无构建、无 CDN，离线可用）</div>
+      <div class="chips">
+        <span class="chip">检索页（文件/行/列 定位）</span>
+        <span class="chip">字段映射页（矩阵 + 区域框选 + 预演）</span>
+        <span class="chip">模板转换页</span>
+        <span class="chip">双表对比页（左右坐标）</span>
+        <span class="chip">设置页</span>
+      </div>
+    </div>
+  </div>
+  <div class="arrow">▼ &nbsp; HTTP + JSON &nbsp;(127.0.0.1:8765)</div>
+  <div class="layer l2">
+    <div class="lt">接口层</div>
+    <div class="lc">
+      <div class="head">app/server.py &nbsp;—&nbsp; 路由 / 静态托管 / 任务与下载令牌</div>
+      <div class="chips">
+        <span class="chip">/api/search</span><span class="chip">/api/cell</span><span class="chip">/api/templates</span>
+        <span class="chip">/api/profiles</span><span class="chip">/api/mapping/preview</span><span class="chip">/api/convert</span>
+        <span class="chip">/api/compare</span><span class="chip">/api/audit</span>
+      </div>
+    </div>
+  </div>
+  <div class="arrow">▼</div>
+  <div class="layer l3">
+    <div class="lt">服务层</div>
+    <div class="lc">
+      <div class="head">app/services/ &nbsp;—&nbsp; 业务编排（薄）</div>
+      <div class="chips">
+        <span class="chip">search_service</span><span class="chip">mapping_service</span>
+        <span class="chip">convert_service</span><span class="chip">compare_service</span>
+        <span class="chip">workspace_service</span><span class="chip">edit_service</span>
+      </div>
+    </div>
+  </div>
+  <div class="arrow">▼</div>
+  <div class="layer l4">
+    <div class="lt">领域层</div>
+    <div class="lc">
+      <div class="head">app/core/ &nbsp;—&nbsp; 纯逻辑，可单测</div>
+      <div class="chips">
+        <span class="chip key">model.py 契约</span>
+        <span class="chip">detect.py 表头/数据区</span>
+        <span class="chip">normalize.py 归一化</span>
+        <span class="chip">index.py 倒排</span>
+        <span class="chip">search.py 查询/打分</span>
+        <span class="chip">mapping.py 规则引擎</span>
+        <span class="chip">template.py 模板注入</span>
+        <span class="chip">compare.py 差异</span>
+        <span class="chip">cellref.py 坐标</span>
+        <span class="chip">audit.py 备份/审计</span>
+        <span class="chip">export.py 导出</span>
+      </div>
+    </div>
+  </div>
+  <div class="arrow">▼</div>
+  <div class="layer l5">
+    <div class="lt">读写层</div>
+    <div class="lc">
+      <div class="head">统一模型 WorkbookModel：读 → 只读解析；写 → 最小改动回写</div>
+      <div class="chips">
+        <span class="chip key">app/readers/</span>
+        <span class="chip">sniff.py 魔数嗅探</span>
+        <span class="chip">ooxml.py (xlsx/xlsm/et-zip)</span>
+        <span class="chip">biff.py (xls/et-ole)</span>
+        <span class="chip">csvr.py</span>
+        <span class="chip key">app/writers/</span>
+        <span class="chip">ooxml_writer.py 原地写回</span>
+        <span class="chip">biff_writer.py（二期）</span>
+      </div>
+    </div>
+  </div>
+  <div class="io">
+    <div class="box"><b>读路径：</b>目标文件夹（递归）→ 魔数识别 → 解析 → 表头/数据区识别 → 索引</div>
+    <div class="box"><b>写路径：</b>冲突检测 → 备份到 data/backup/ → 定位节点 → 最小改动 → 重解析自检 → 审计 data/audit/</div>
+  </div>
+</div>
+<p class="legend"><span class="tag">零依赖</span>仅 Python 3.10+ 标准库；<span class="tag">只读优先</span>源文件默认不改，写回必须备份+自检+可回滚；<span class="tag">契约冻结</span>model.py 是并行开发唯一同步点。</p>
+
+<h3 id="sec8">2.2 关键设计决策</h3>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>决策</th>
+<th>方案</th>
+<th>理由</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>D1 零第三方依赖</strong></td>
+<td>只用 Python 标准库（<code>http.server</code> / <code>json</code> / <code>sqlite3</code> / <code>zipfile</code> / <code>xml.etree</code> / <code>struct</code> / <code>difflib</code> / <code>unicodedata</code>）</td>
+<td>目标机无网络，pip 实测不可用；"小体积"要求</td>
+</tr>
+<tr>
+<td><strong>D2 自研 .xls 解析</strong></td>
+<td><code>biff.py</code>：CFB(OLE2) 容器 + BIFF8 记录（SST/LABELSST/NUMBER/RK/MULRK/FORMULA/LABEL/MERGEDCELLS）</td>
+<td>语料中 .xls 占 32/65，是硬需求。**可行性已用 <code>scripts/probe_xls.py</code> 实测验证**：3 个真实 .xls 全部读出工作表名、字符串、数字、合并区</td>
+</tr>
+<tr>
+<td><strong>D3 按魔数识别格式</strong></td>
+<td>读前 8 字节：<code>d0cf11e0</code>→OLE2（xls/部分 et）、<code>504b0304</code>→zip（xlsx/xlsm/xlsb/部分 et）、否则按 csv 嗅探编码</td>
+<td><code>.et</code> 实测两种容器都有；扩展名会骗人，魔数不会</td>
+</tr>
+<tr>
+<td><strong>D4 模板改造=克隆注入，而非重绘</strong></td>
+<td>把模板 .xlsx 当 zip 打开，定位目标 sheet XML，在数据起始行处克隆行节点并写入数据/共享字符串，保留样式索引、合并区、列宽、公式；行样式复用模板"数据样板行"</td>
+<td>只有这样才能"样式保真"；自绘样式必然走样。比引入 openpyxl 更可控且零依赖</td>
+</tr>
+<tr>
+<td><strong>D5 多级表头识别</strong></td>
+<td>从顶部向下扫描：连续非空行且下方为数据 → 判定表头区；用合并区把"跨列标题"向下传播，字段名 = 各级标题用 <code>/</code> 连接；数据区从第一个"类型突变"行开始</td>
+<td>台账 2 行 58 列、22 处合并是典型；写死行列号不可维护</td>
+</tr>
+<tr>
+<td><strong>D6 索引：字符二元组 + 片段校验</strong></td>
+<td>归一化文本 → 中文按 2-gram、英文数字按整词/前缀建倒排；查询先取候选集再逐条做子串校验与打分</td>
+<td>中文没有空格分词，2-gram 召回高、结构简单；语料仅 29 MB，内存索引足够</td>
+</tr>
+<tr>
+<td><strong>D7 输出只写 xlsx</strong></td>
+<td>无论来源是 xls/csv/et，输出统一为 xlsx</td>
+<td>统一保真路径；不冒险回写老格式</td>
+</tr>
+<tr>
+<td><strong>D8 对比用"主键匹配 + 字段级差异"</strong></td>
+<td>主键自动推荐（唯一性/非空率打分）+ 人工指定（支持多列组合）；差异分 新增/删除/修改；文本先归一化再比，数值带容差</td>
+<td>真实数据主键常脏（空值、重复、带空格），必须有显式告警</td>
+</tr>
+<tr>
+<td><strong>D9 坐标只有一个口径</strong></td>
+<td>全局唯一 <code>CellRef = {filePath(绝对), sheet, row(1 起), col(1 起), colLetter, a1, fieldName}</code>，检索结果、导出、审计日志、写回请求全部复用</td>
+<td>杜绝"行号从 0 开始 / 行号跳表头"这类事故；用户看到的就是 Excel 左侧行标</td>
+</tr>
+<tr>
+<td><strong>D10 写回分层，风险隔离</strong></td>
+<td>一期：xlsx / xlsm / et(zip) <strong>原地写回</strong>（zip 条目级替换目标 XML 节点，其余条目字节不变）；xls / et(OLE2) <strong>另存为 xlsx 副本</strong>（原件保留并备份，界面明确提示"已生成 xlsx 版"）。二期再评估 BIFF8 原地写回（需重排 BOUNDSHEET 偏移，风险高）</td>
+<td>不改老格式 = 不冒毁文件风险；绝大多数可编辑需求已被 xlsx/xlsm 覆盖，而 xls 多为系统导出、本就不该回写</td>
+</tr>
+<tr>
+<td><strong>D11 写回必须先备份、后自检</strong></td>
+<td>写前把原文件复制到 <code>data/backup/{时间戳}/</code>，写后重新解析一遍自检（能读出、目标格 = 新值、工作表数不变），失败则自动回滚</td>
+<td>写回是不可逆操作，宁可失败也不能产出打不开的文件</td>
+</tr>
+<tr>
+<td><strong>D12 映射模型=规则列表，双模式并存</strong></td>
+<td>一条规则 = <code>{source:{sheet,rowSel,colSel}, target:{sheet,rowSel,colSel}, mode, transform}</code>；<code>mode ∈ {cell 逐格, block 区域块, transpose 区域转置, filldown 合并填充, repeat 常量重复}</code>；<code>rowSel/colSel ∈ {fixed:N, record:偏移, header:字段名, span:N}</code>。<strong>默认模式①字段映射（列→列，记录逐条下移）</strong>覆盖 90% 场景；<strong>模式②区域映射（自由框选源/目标区间 + 转置）</strong>覆盖"A 表某行→B 表某列"。两种规则可在同一方案里按序混用</td>
+<td>用一套坐标化规则同时满足"简单映射"和"异形映射"，避免为转置单开一条代码路径；规则 JSON 可预览、可复用、可手改</td>
+</tr>
+<tr>
+<td><strong>D13 模板登记、可替换</strong></td>
+<td>模板以"登记"方式管理：<code>{name, filePath, sheet, titleRange, headerRange, dataStartCell, fields[]}</code>，其中 <code>dataStartCell</code> 由用户在预览网格上框选；替换模板=换文件重新解析，映射方案只引用"目标字段名/目标坐标"，不引用具体文件</td>
+<td>满足"模板要求可以替换"；年度换模板时旧方案仍可用（字段名映射），无需重做</td>
+</tr>
+</tbody></table></div>
+<h3 id="sec9">2.3 统一数据模型（契约，<code>app/core/model.py</code>）</h3>
+<pre><code>@dataclass
+class Cell:            # 一个单元格
+    raw: Any           # 原始值
+    kind: str          # 'text' | 'number' | 'date' | 'bool' | 'formula' | 'blank'
+    text: str          # 展示/检索文本（已归一化前的展示态）
+    num: float | None
+    formula: str | None
+
+@dataclass
+class SheetModel:      # 一个工作表
+    name: str
+    n_rows: int
+    n_cols: int
+    cells: dict[tuple[int, int], Cell]
+    merges: list[tuple[int,int,int,int]]      # r1,r2,c1,c2
+    hidden: bool = False
+
+@dataclass
+class WorkbookModel:
+    path: str
+    fmt: str           # 'xlsx'|'xls'|'csv'|'et-zip'|'et-ole'
+    sheets: list[SheetModel]
+
+@dataclass
+class Field:           # 识别出的字段
+    index: int
+    name: str          # '计划部前期相关资料 / 项目决策时间'
+    level: int         # 表头层数
+    kind_hint: str     # 推断类型：text/number/date/phone/code/money
+    col_span: tuple[int,int]
+
+@dataclass
+class TableModel:      # 规范化后的"逻辑表"
+    source: FileRef
+    sheet: str
+    header_rows: list[int]
+    data_start: int
+    data_end: int
+    excluded_rows: list[tuple[int,str]]   # [(行号,'小计'|'占位'|'空行')]
+    fields: list[Field]
+    rows: list[dict[int, Cell]]           # 行号 → {列号: Cell}
+    parse_notes: list[str]
+
+@dataclass
+class CellRef:          # ★全局唯一坐标（D9），前端/导出/日志/写回共用
+    file_path: str      # 绝对路径
+    sheet: str
+    row: int            # 1 起，与 Excel 左侧行标一致
+    col: int            # 1 起
+    # 派生属性：col_letter -&gt; 'AF'；a1 -&gt; 'AF12'
+    # 展示串：'第12行 · 第AF列(第32列) · AF12'
+
+@dataclass
+class EditOp:           # 一次写回请求
+    ref: CellRef
+    new_value: str | float | None
+    kind: str           # 'value' | 'formula' | 'clear'
+    expect_mtime: float # 冲突检测用
+    expect_size: int
+
+@dataclass
+class AuditEntry:       # 审计日志，追加写 data/audit/*.jsonl
+    ts: str
+    ref: CellRef
+    old_value: str
+    new_value: str
+    backup_path: str
+    result: str         # 'ok' | 'conflict' | 'rolled_back'
+
+@dataclass
+class TemplateDef:      # 模板登记（D13）：模板可替换，字段/起始格从文件解析
+    id: str
+    name: str
+    file_path: str
+    sheet: str
+    title_range: tuple[int,int,int,int] | None   # 大标题区（可为空）
+    header_range: tuple[int,int,int,int]          # 表头区（支持多级合并）
+    data_start: tuple[int,int]                    # ★用户框选的数据起始单元格 (行,列)
+    fields: list[Field]
+
+@dataclass
+class Sel:              # 行/列选择器（D12）
+    kind: str           # 'fixed' 固定N | 'record' 当前记录行+偏移 | 'header' 按字段名 | 'span' 连续N个
+    value: int | str
+
+@dataclass
+class MappingRule:      # 一条坐标化映射规则
+    source: dict        # {sheet, row: Sel, col: Sel}
+    target: dict        # {sheet, row: Sel, col: Sel}
+    mode: str           # 'cell' | 'block' | 'transpose' | 'filldown' | 'repeat'
+    transform: str      # 'identity' | 'number' | 'date' | 'concat' | 'constant'
+    on_missing: str     # 'blank' | 'skip' | 'error'
+
+@dataclass
+class MappingProfile:   # 映射方案，存 data/profiles/*.json，可复用
+    id: str
+    name: str
+    template_id: str
+    source_signature: str      # 来源表头指纹 → 同类表自动套用
+    rules: list[MappingRule]
+    notes: str</code></pre>
+<blockquote><p><strong>契约冻结</strong>是并行开发的前提：<code>WorkbookModel</code> / <code>TableModel</code> / <code>CellRef</code> / <code>TemplateDef</code> / <code>MappingRule</code> / <code>EditOp</code> / JSON API 一旦冻结，读取层、检索层、映射层、对比层、写回层、前端才能同时开工。</p></blockquote>
+<h3 id="sec10">2.4 HTTP API（v1，全部 JSON）</h3>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>方法</th>
+<th>路径</th>
+<th>说明</th>
+</tr></thead><tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/health</code></td>
+<td>存活/版本/索引状态</td>
+</tr>
+<tr>
+<td>GET/POST</td>
+<td><code>/api/workspace</code></td>
+<td>读取/设置目标文件夹；POST 后自动触发扫描</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/files</code></td>
+<td>文件清单（格式、大小、修改时间、工作表数、状态、错误）</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/files/{fid}/sheets</code></td>
+<td>工作表列表 + 每个表识别出的表头/数据区摘要</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/files/{fid}/sheet/{idx}/preview?rows=50</code></td>
+<td>预览（保留合并信息，前端画网格）</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/index/refresh</code></td>
+<td>增量重建索引</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/search?q=&amp;file=&amp;field=&amp;mode=all|any|phrase&amp;limit=50&amp;offset=0</code></td>
+<td>检索；每条命中返回 <code>CellRef</code>（文件绝对路径/工作表/行/列字母/列序号/A1）+ 字段名 + 命中片段与高亮区间 + 命中总数</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/search/export</code></td>
+<td>导出检索结果为 xlsx（含"文件地址/第几行第几列"列）</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/cell?file=&amp;sheet=&amp;row=&amp;col=</code></td>
+<td>单元格详情：值/类型/公式/显示格式/所属合并区/是否小计行/字段名</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td><code>/api/cell</code></td>
+<td><strong>写回单元格</strong>：<code>{ref, newValue, kind, expectMtime, expectSize}</code> → 备份 → 最小改动写回 → 重解析自检 → 记审计；冲突返回 <code>409 CONFLICT</code></td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/cells/batch</code></td>
+<td>批量写回（同文件多坐标：一次备份、一次原子写、一条审计）</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/replace/preview</code> + <code>/api/replace/apply</code></td>
+<td>查找替换：先预演差异清单（旧值→新值逐条），确认后批量写回</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/undo/{opId}</code></td>
+<td>用备份回滚一次写回（整文件级回滚）</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/audit?file=&amp;limit=</code></td>
+<td>修改历史（时间/坐标/旧值/新值/结果）</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/open</code></td>
+<td>在资源管理器打开所在文件夹 / 用 WPS 打开该文件（仅允许白名单根目录内的路径）</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/templates</code> / POST / DELETE</td>
+<td>模板清单 / <strong>登记（上传任意 xlsx，解析表头并返回字段）</strong> / 删除</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/templates/{id}/anchor</code></td>
+<td>设置/替换模板的"数据起始单元格"与表头区（用户在预览网格上框选）</td>
+</tr>
+<tr>
+<td>GET/POST/DELETE</td>
+<td><code>/api/profiles</code></td>
+<td>映射方案 CRUD（<code>profiles/*.json</code>，含规则列表，见 <code>MappingProfile</code>）</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/mapping/suggest</code></td>
+<td>自动推荐：字段→字段（含置信度）；有表头指纹时整方案套用</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/mapping/preview</code></td>
+<td><strong>映射预演</strong>：对前 N 条记录按规则计算目标单元格，返回逐单元格"来源坐标→目标坐标→值"，用户确认后才真正生成</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/convert</code></td>
+<td>执行转换：<code>{sources[], profileId, templateId, mode:'append'|'replace', outName}</code> → 生成 xlsx</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/compare</code></td>
+<td>执行对比：<code>{left, right, keys[], options{trim,tolerance,...}}</code> → 差异结果，**每条差异带左右两侧 <code>CellRef</code>**</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/compare/export</code></td>
+<td>导出对比报告（含"左侧文件/行/列、右侧文件/行/列"列，红/绿/黄标注）</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/download/{token}</code></td>
+<td>下载生成的文件</td>
+</tr>
+</tbody></table></div>
+<p>错误统一返回 <code>{ok:false, code, message, detail?}</code>；长任务返回 <code>{ok:true, taskId}</code> 供前端轮询 <code>/api/tasks/{id}</code>。</p>
+<h3 id="sec11">2.5 目录结构</h3>
+<pre><code>excel-toolkit/
+├─ 启动.bat                    # 找 Python → 起服务 → 打开浏览器
+├─ README.md                   # 使用说明（中文）
+├─ app/
+│  ├─ server.py                # ThreadingHTTPServer + 路由 + 静态托管
+│  ├─ api.py                   # 各接口 handler（薄，只做参数校验与编排）
+│  ├─ core/
+│  │  ├─ model.py              # ★契约：数据类（含 CellRef / EditOp / AuditEntry）
+│  │  ├─ sniff.py              # 魔数嗅探
+│  │  ├─ readers/{ooxml,biff,csvr}.py
+│  │  ├─ writers/ooxml_writer.py # ★最小改动写回（zip 条目级替换）
+│  │  ├─ writers/biff_writer.py  # .xls 原地写回（二期，一期走另存 xlsx）
+│  │  ├─ detect.py             # 表头/数据区/小计行识别
+│  │  ├─ normalize.py          # 全半角、空白、日期、数值、手机号归一
+│  │  ├─ index.py              # 倒排索引
+│  │  ├─ search.py             # 查询解析、打分、片段高亮
+│  │  ├─ mapping.py            # 自动映射（别名词典+相似度）
+│  │  ├─ template.py           # 模板克隆注入
+│  │  ├─ xlsx_writer.py        # 新建 xlsx（导出用）
+│  │  ├─ compare.py            # 主键匹配 + 差异
+│  │  ├─ audit.py              # 备份 / 审计日志 / 回滚
+│  │  └─ export.py             # 检索/对比结果导出
+│  ├─ services/*.py            # 业务编排（含 edit_service）
+│  └─ web/                     # index.html / app.js / style.css / pages/*
+├─ data/
+│  ├─ profiles/                # 映射方案 JSON
+│  ├─ templates/               # 模板登记表
+│  ├─ cache/                   # 索引缓存（可选）
+│  ├─ backup/{时间戳}/         # ★每次写回前的原文件备份
+│  ├─ audit/                   # ★修改审计 JSONL
+│  └─ output/                  # 所有生成物
+├─ tests/                      # 单元 + 端到端（用 samples/ 真实文件）
+├─ samples/                    # 样本台账 + 结构导出
+├─ scripts/                    # 探针与运维脚本
+└─ docs/                       # 本设计与评估文档</code></pre>
+<h3 id="sec12">2.6 关键技术流程</h3>
+<p><strong>① 检索</strong>：扫描 → 嗅探 → 解析 → 识别表头/数据区 → 每单元格归一化 → 建倒排（token→posting）→ 查询（2-gram 候选 + 子串校验 + 字段权重打分）→ 每条命中带 <code>CellRef</code>（<strong>文件绝对路径 + 工作表 + 第几行 + 第几列列号/列字母 + A1</strong>）+ 字段名 + 高亮区间。索引按 <code>(路径, 大小, mtime)</code> 判脏，只重建变动文件。</p>
+<p><strong>② 模板登记与字段映射</strong>：</p>
+<pre><code>登记模板（任意 xlsx）→ 解析表头（支持多级合并）得到字段列表
+                    → 用户在预览网格上框选「数据起始单元格」→ TemplateDef 落库
+选择来源表 → 解析来源字段 → /api/mapping/suggest 自动推荐（名称/别名词典/类型/相似度）
+           → 用户在「映射矩阵」里调整：源行/源列 → 目标行/目标列（可固定、可随记录、可按字段名、可跨区域）
+           → /api/mapping/preview 逐单元格预演 → 确认 → 保存 MappingProfile
+再次遇到同类表：按表头指纹（source_signature）自动套用已有方案</code></pre>
+<p>映射两种模式（D12）：</p>
+<ul><li><strong>模式①字段映射</strong>（默认）：源列 <code>C</code> → 目标列 <code>AF</code>，记录逐条向下平移；覆盖"列→列"绝大多数场景。</li><li><strong>模式②区域映射</strong>：自由框选源区间与目标区间，可选 <code>transpose</code>（转置）、<code>filldown</code>（合并向下填充）、<code>repeat</code>（常量整列）、<code>block</code>（整块搬运）。<strong>"把 A 表某行（横向的字段名→值）填写到 B 表某列（竖向）"就走这条</strong>：源区间 <code>A表!B3:AF3</code> → 目标区间 <code>B表!F4:F37</code>，mode=<code>transpose</code>。</li><li>两种规则可在同一方案里按顺序混用；规则全部是坐标化 JSON，可预览、可手改、可复用。</li></ul>
+<p><strong>③ 模板生成</strong>：打开目标模板 zip → 解析 <code>xl/worksheets/sheetN.xml</code>、<code>sharedStrings.xml</code>、<code>styles.xml</code> → 从 <code>TemplateDef.data_start</code> 起按"数据样板行"样式克隆行节点 N 次 → 按规则列表逐单元格写入（字符串进 sharedStrings，数值/日期按原格 style 的 numFmt 写；区域转置按矩阵坐标映射）→ 更新 <code>&lt;dimension&gt;</code>、删除 <code>calcChain</code> → 其余条目字节原样复制 → 重新打包 → 输出 <code>data/output/台账_YYYYMMDD_HHMM.xlsx</code>。</p>
+<p><strong>④ 对比</strong>：两张表 → 各取主键列 → 匹配（唯一命中/重复/仅左/仅右）→ 对匹配上的行逐字段比较（归一化后比；数值容差；空值按规则）→ 输出差异矩阵 + 汇总统计，**每条差异同时给出左侧与右侧的 <code>CellRef</code>** → 导出 xlsx（修改单元格黄、仅左红、仅右绿；报告含"左侧文件/行/列、右侧文件/行/列"四列）。</p>
+<p><strong>⑤ 编辑写回</strong>（R6）：</p>
+<pre><code>用户点命中 → GET /api/cell 取单元格详情（值/类型/公式/合并归属/字段名）
+        ↓ 在弹窗里改值
+PUT /api/cell {ref, newValue, expectMtime, expectSize}
+        ↓
+① 冲突检测：磁盘 mtime/size ≠ 索引记录 → 409，要求刷新后重试
+② 备份：复制原文件到 data/backup/{ts}/&lt;相对路径&gt;
+③ 定位：zip 内找到目标 sheet 的 XML，定位 &lt;c r="AF12"&gt; 节点
+   - 文本：写 sharedStrings 或内联串，改 t="s"/t="inlineStr"
+   - 数值/日期：改 &lt;v&gt;，样式索引沿用原格（不重建样式）
+   - 公式：kind='formula' 时改 &lt;f&gt;；kind='value' 时改缓存 &lt;v&gt;
+   - 合并区：只允许写左上角，其余坐标拒绝并提示
+④ 落盘：其余 zip 条目按原始字节复制；写临时文件成功后原子替换
+⑤ 自检：重新解析，校验目标格==新值、工作表数/尺寸未变；失败自动回滚
+⑥ 审计：append data/audit/*.jsonl（时间/坐标/旧值/新值/备份路径/结果）
+⑦ 增量更新索引中该单元格的 posting</code></pre>
+<h3 id="sec13">2.7 前端设计（小体积）</h3>
+<ul><li>单 <code>index.html</code> + 5 个 JS 模块 + 1 个 CSS，无框架、无构建、无 CDN（离线可用）。</li><li>页面：<strong>检索</strong>（文件夹、索引状态、搜索框、结果表、导出）、<strong>映射</strong>（模板登记/替换、来源与目标网格预览、映射矩阵、区域框选、预演）、<strong>转换</strong>（选来源+方案→预览前 5 行→生成下载）、<strong>对比</strong>（左右表选择、主键建议、差异表、导出）、<strong>设置</strong>（目录、忽略规则、缓存清理）。</li><li>检索结果表固定列：<strong>文件地址（悬停显示完整路径，可"打开所在文件夹"/"用 WPS 打开"）｜工作表｜第几行｜第几列（字母+序号）｜A1｜字段名｜命中内容（高亮）｜操作（编辑）</strong>。</li><li>映射页交互（R2）：左侧来源表网格、右侧目标模板网格，两侧都能<strong>直接框选单元格/区域</strong>；中间是"映射矩阵"（每行一条规则：源行选择 + 源列选择 → 目标行选择 + 目标列选择 + 模式 + 转换）；默认给"字段映射"简表，点"高级/区域"切到转置等模式；右下角"预演"显示逐单元格结果。</li><li>对比结果表固定列：<strong>差异类型｜主键值｜字段名｜左值｜左文件｜左行/列/A1｜右值｜右文件｜右行/列/A1｜导出</strong>。</li><li>编辑交互：点行 → 右侧/弹窗显示单元格详情（当前值、类型、公式、合并归属、所属行是否小计）→ 改值 → 保存 → 就地刷新该行与索引；支持"查找替换"页：先列出 N 条"旧值→新值"预演清单，逐条勾选后批量写回。</li><li>数据量控制：结果分页（50/页）；预览只取前 50 行；大表用虚拟滚动。</li></ul>
+<h3 id="sec14">2.8 风险与对策</h3>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>风险</th>
+<th>影响</th>
+<th>对策</th>
+</tr></thead><tbody>
+<tr>
+<td>BIFF 边界情况（BIFF5/加密/异常记录）</td>
+<td>.xls 解析失败</td>
+<td>记录级容错（未知记录跳过）；加密文件标记"需人工另存"；不做激进猜测</td>
+</tr>
+<tr>
+<td>表头识别误判（无表头/多行标题/首行空）</td>
+<td>映射和对比错位</td>
+<td>多策略投票 + UI 可手动调整表头行/数据起始行；<code>parse_notes</code> 暴露判据</td>
+</tr>
+<tr>
+<td>模板克隆破坏样式</td>
+<td>输出文件打开报修复</td>
+<td>只改必要节点（行、共享字符串、dimension），其余字节原样保留；输出后用 WPS 实测打开</td>
+</tr>
+<tr>
+<td>合并单元格导致主键缺失</td>
+<td>对比大量误判"仅左/仅右"</td>
+<td>提供"向下填充"补全开关，默认开启并在结果里标注</td>
+</tr>
+<tr>
+<td>中文模糊搜索噪声</td>
+<td>结果过多/漏检</td>
+<td>默认 AND 多词；短语用引号；后续可选加拼音首字母（v1.1，不阻塞 v1）</td>
+</tr>
+<tr>
+<td>真实表格越用越多</td>
+<td>索引膨胀</td>
+<td>增量索引 + 文件级跳过 + 缓存重建入口</td>
+</tr>
+<tr>
+<td><strong>写回毁文件</strong>（改错节点/字符串表/样式索引）</td>
+<td>文件打不开或数据错乱</td>
+<td>最小改动 + 写前备份 + 写后重解析自检 + 自动回滚；只允许写单值/公式，不重排结构</td>
+</tr>
+<tr>
+<td><strong>文件被 WPS 打开时写回</strong></td>
+<td>写回被覆盖或冲突</td>
+<td>冲突检测（mtime/size）；提示"请先关闭该文件"；不强行写只读/被占用文件</td>
+</tr>
+<tr>
+<td><strong>误改关键列</strong></td>
+<td>业务数据损坏</td>
+<td>界面标注主键/金额等敏感列，修改需二次确认；审计日志支持按文件回看与回滚</td>
+</tr>
+<tr>
+<td><strong>.xls 无法原地写回</strong></td>
+<td>用户以为改了实际没改</td>
+<td>明确提示"已生成 xlsx 副本，原件保留"；副本路径与原件路径都显示（见 D10）</td>
+</tr>
+<tr>
+<td><strong>转置/区域映射配错</strong></td>
+<td>数据错位而不报错（最危险）</td>
+<td>强制"预演"：生成前展示逐单元格"来源坐标→目标坐标→值"清单；规则落库后可回看；生成时记录映射 provenance</td>
+</tr>
+<tr>
+<td><strong>模板被替换后旧方案失效</strong></td>
+<td>用户以为套用了旧方案</td>
+<td>方案与模板解耦（按字段名/坐标引用）；模板变更时校验字段是否仍存在，缺失项在 UI 标红并阻断生成</td>
+</tr>
+</tbody></table></div>
+<hr>
+<h2 id="sec15">三、已确认的决策（2026-11-09）</h2>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>决策</th>
+<th>结论</th>
+<th>备注</th>
+</tr></thead><tbody>
+<tr>
+<td>默认扫描目录</td>
+<td><code>D:\表格\示例文件夹</code>（递归）</td>
+<td>已实测 65 个表格 / 29.3 MB；界面上仍可随时切换</td>
+</tr>
+<tr>
+<td>交付形态</td>
+<td>本地 Web 应用（<code>启动.bat</code> + 浏览器）</td>
+<td>见 R4</td>
+</tr>
+<tr>
+<td>阶段性取舍</td>
+<td>先交付"需求+架构+切片评估"文档，审阅后决定是否开工</td>
+<td>待用户确认</td>
+</tr>
+<tr>
+<td>模板策略（2026-11-09 新增）</td>
+<td><strong>模板可替换</strong>：任意 xlsx 登记为模板，数据起始单元格由用户框选；不写死台账 58 列</td>
+<td>见 R2、D13</td>
+</tr>
+<tr>
+<td>映射策略（2026-11-09 新增）</td>
+<td>映射按<strong>坐标</strong>而非仅按列；双模式（字段映射 / 区域映射含转置）；"A 表某行 → B 表某列"由 <code>transpose</code> 规则覆盖</td>
+<td>见 R2、D12</td>
+</tr>
+<tr>
+<td>结果坐标口径（2026-11-09 新增）</td>
+<td><strong>搜索结果与对比结果</strong>都必须给出：文件地址 + 工作表 + 第几行 + 第几列（字母+序号）+ A1</td>
+<td>见 R3、R5、D9</td>
+</tr>
+</tbody></table></div>
+<h2 id="sec16">四、验收清单（v1）</h2>
+<ol><li>用 <code>samples/</code> 与真实目录各跑一次：文件清单、格式识别、工作表数全部正确，无未处理异常。</li><li>检索：随机抽 20 个单元格内容，全部能搜到并正确定位；关键词高亮正确；<strong>每条结果都带"文件地址/工作表/第几行/第几列/A1"</strong>。</li><li>映射：台账模板 58 字段全部可映射；自动推荐 top-1 命中率抽样 ≥ 60%；方案保存/复用可用；**换一个模板（例如 <code>Sheet1</code> 结构的简表）也能登记并映射**。</li><li><strong>异形映射</strong>：构造"A 表第 3 行 → B 表第 F 列"的案例，<code>transpose</code> 规则生成结果与手工排列一致；预演清单与实际输出逐格一致。</li><li>转换：生成的台账在 WPS 中打开无修复提示，样式/合并/列宽与模板一致，数据行数与来源一致，小计行不被当作数据。</li><li>对比：对"改前/改后"两份台账，差异结果与人工核对一致；<strong>每条差异都带左右两侧的文件/行/列</strong>；重复/缺失主键有告警；报告可导出打开。</li><li>修改：改一个文本格、一个数值格、一个公式格后，WPS 打开无修复提示；未涉及的工作表/样式/公式不变；备份可还原；外部改动时保存被拒绝并提示。</li><li>启动：删除 <code>data/cache</code> 后双击 <code>启动.bat</code>，30 秒内浏览器可用。</li></ol>
+<hr>
+<h2 id="sec17">五、实现状态（2026-11-09 交付）</h2>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>切片</th>
+<th>状态</th>
+<th>产出</th>
+</tr></thead><tbody>
+<tr>
+<td>S0 契约与服务骨架</td>
+<td>✅</td>
+<td><code>app/core/model.py</code>、<code>app/server.py</code>、<code>app/api.py</code>、<code>app/web/</code> 骨架、<code>启动.bat</code></td>
+</tr>
+<tr>
+<td>S1 采集层</td>
+<td>✅</td>
+<td><code>sniff.py</code> + <code>readers/{ooxml,biff,csvr}.py</code>；真实语料 <strong>66/66 文件解析成功</strong>（xls:32 / xlsx:31 / et:2 / csv:1，25.3 万单元格）</td>
+</tr>
+<tr>
+<td>S2 结构识别与归一化</td>
+<td>✅</td>
+<td><code>detect.py</code> + <code>normalize.py</code>；台账样本识别出 58 字段 / 两级表头 / 小计行排除</td>
+</tr>
+<tr>
+<td>S3 检索</td>
+<td>✅</td>
+<td><code>index.py</code> + <code>search.py</code> + <code>search_service.py</code>；24.5 万单元格索引 18.8s，单词命中 1.1ms，「合同」6561 条 0.49s</td>
+</tr>
+<tr>
+<td>S4 映射与模板</td>
+<td>✅</td>
+<td><code>mapping.py</code> + <code>template.py</code> + <code>mapping_service.py</code>；支持换模板、坐标化规则、<code>transpose</code> 行→列转置、克隆注入保样式</td>
+</tr>
+<tr>
+<td>S5 双表对比</td>
+<td>✅</td>
+<td><code>compare.py</code> + <code>compare_service.py</code>；差异带左右 <code>CellRef</code>，重复/空主键告警，报告导出</td>
+</tr>
+<tr>
+<td>S6 前端</td>
+<td>✅</td>
+<td>5 个页面（检索/字段映射/模板转换/数据对比/设置），原生 ES Module，无框架</td>
+</tr>
+<tr>
+<td>S8 编辑写回</td>
+<td>✅</td>
+<td><code>writers/ooxml_writer.py</code> + <code>audit.py</code> + <code>edit_service.py</code>；最小改动写回、冲突检测、备份、自检、审计、撤销</td>
+</tr>
+<tr>
+<td>S7 集成验收（Lead）</td>
+<td>✅</td>
+<td>250 项测试全绿；<code>scripts/acceptance.py</code> 13/13 项通过（详见 <code>docs/验收报告.md</code>）</td>
+</tr>
+</tbody></table></div>
+<p><strong>与设计文档的差异说明</strong>：新增 Lead 维护的 <code>app/services/workspace_service.py</code>（目录扫描/文件清单/工作表预览，文件 id = sha1(路径)[:12]）与检索倒排（行级 bigram）；<code>app/core/xlsxwriter.py</code> 用于导出类文件，模板转换仍走 <code>template.inject</code> 克隆注入。</p><h1 class="doc">开发需求评估与"切片"方案</h1>
+<ul><li>版本：v1.0</li><li>关联文档：<code>docs/01-需求整合与项目架构.md</code></li><li>结论先行：<strong>需要切片，建议切成 5 个开发切片 + 1 个契约/收口阶段（Lead）</strong>。切片以"文件写作用域互不重叠 + 只依赖冻结契约"为边界，可在同一工作区并行推进。</li></ul>
+<hr>
+<h2 id="sec1001">一、评估方法</h2>
+<ol><li>先落需求与架构（已完成），把系统拆成 6 个可独立验收的能力域；</li><li>对每个能力域估算代码量、耦合度、不确定性（见 2.1）；</li><li>用"能否在契约冻结后独立开工、且改动的文件不重叠"作为可切片判据；</li><li>不可切的部分（契约、骨架、集成、真机验证）留给 Lead 串行完成。</li></ol>
+<p>代码量按实现复杂度估算（含注释与必要容错），不含测试脚本。</p>
+<h3 id="sec1002">1.1 能力域评估</h3>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>域</th>
+<th>内容</th>
+<th>预估代码量</th>
+<th>耦合</th>
+<th>不确定性</th>
+<th>可独立开工</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>A 采集层</strong></td>
+<td>魔数嗅探；OOXML 读取（zip+XML 流式）；BIFF8/OLE2 读取；CSV（含 GBK/UTF-8 嗅探）</td>
+<td>900–1100 行</td>
+<td>只依赖 <code>WorkbookModel</code></td>
+<td><strong>高</strong>：老格式边界多（已用探针验证主路径可行，见下）</td>
+<td>是</td>
+</tr>
+<tr>
+<td><strong>B 结构识别与归一化</strong></td>
+<td>多级表头识别、合并传播、数据区/小计/占位行判定、单元格归一化（全半角/空白/日期/数值/手机号）</td>
+<td>500–700 行</td>
+<td>依赖 A 的单元格模型</td>
+<td>中高：判据要靠真实样本调</td>
+<td>是（用样本 + 手写 fixture）</td>
+</tr>
+<tr>
+<td><strong>C 索引与检索</strong></td>
+<td>2-gram 倒排、增量刷新、查询解析（AND/OR/短语）、打分、片段高亮、结果导出</td>
+<td>500–700 行</td>
+<td>依赖 B 的 <code>TableModel</code></td>
+<td>中：算法确定</td>
+<td>是（契约 + mock 表）</td>
+</tr>
+<tr>
+<td><strong>D 字段映射与模板改造</strong></td>
+<td>模板登记/替换（解析表头 + 用户框选数据起始格）、别名词典+相似度自动推荐、<strong>坐标化映射规则引擎（列→列 / 行→列转置 / 区域块）</strong>、方案 CRUD、<strong>模板 zip 克隆注入</strong>（保样式）、数值/日期按 numFmt 写入、逐单元格预演</td>
+<td>1200–1600 行</td>
+<td>依赖 B</td>
+<td><strong>高</strong>：xlsx 包结构 + 保样式 + 转置语义</td>
+<td>是（模板样本已具备）</td>
+</tr>
+<tr>
+<td><strong>E 双表对比</strong></td>
+<td>主键推荐与组合键、重复/缺失告警、行匹配、字段级差异、容差与归一化比较、<strong>左右两侧坐标输出</strong>、报告导出</td>
+<td>600–800 行</td>
+<td>依赖 B</td>
+<td>中：规则要产品化</td>
+<td>是（可先用 mock 表）</td>
+</tr>
+<tr>
+<td><strong>H 编辑写回</strong></td>
+<td>冲突检测、备份、zip 条目级最小改动写回（文本/数值/公式/合并拒绝）、写后重解析自检、自动回滚、审计日志、撤销、增量索引更新</td>
+<td>700–900 行</td>
+<td>依赖 A 的读取、S0 契约</td>
+<td><strong>高</strong>：写坏文件不可逆</td>
+<td>是（xlsx 样本现成）</td>
+</tr>
+<tr>
+<td><strong>F Web 前端</strong></td>
+<td>5 个页面、网格预览、<strong>映射矩阵 + 区域框选 + 预演</strong>、单元格编辑弹窗、查找替换、差异三色着色、轮询任务、下载</td>
+<td>1500–1900 行</td>
+<td>只依赖 API 契约</td>
+<td>中</td>
+<td>是（用 mock JSON）</td>
+</tr>
+<tr>
+<td><strong>G 服务骨架/契约/集成</strong></td>
+<td><code>model.py</code> 契约、<code>server.py</code> 路由、静态托管、任务与下载令牌、端到端联调、打包脚本、README</td>
+<td>500–700 行</td>
+<td>全局</td>
+<td>低</td>
+<td>否（必须 Lead 串行）</td>
+</tr>
+<tr>
+<td>测试</td>
+<td>单测（各解析器/识别/索引/映射/对比/写回）+ 端到端（真实样本）</td>
+<td>900–1100 行</td>
+<td>跟随各域</td>
+<td>低</td>
+<td>可分摊</td>
+</tr>
+</tbody></table></div>
+<p><strong>合计 ≈ 7300–9500 行</strong>（不含前端静态资源），属于"单人串行 4–6 天、并行 1 天内可收口"的体量。</p>
+<h3 id="sec1003">1.2 已消除的最大不确定性（探针结论）</h3>
+<p><code>scripts/probe_xls.py</code> 用<strong>纯标准库</strong>（<code>struct</code>）实现了 CFB + BIFF8 读取，已在 3 个真实 <code>.xls</code> 上跑通：</p>
+<ul><li><code>示例预警.xls</code>：2 个表，600 单元格，115 条共享字符串，数字/文本/日期混排 ✓</li><li><code>11月2日…工单4件(1).xls</code>：45 单元格 ✓</li><li><code>示例表格C.xls</code>：161 单元格，7 列 ✓</li></ul>
+<p>同时实测确认：<code>.et</code> 有两种容器（一个 zip、一个 OLE2），所以<strong>必须按魔数而非扩展名分流</strong>；目标机无网络、无 xlrd、无 LibreOffice，因此"零依赖自研解析"是唯一可行路线。→ <strong>切片 A 的主要风险已从"能不能做"降为"边界覆盖多少"。</strong></p>
+<hr>
+<h2 id="sec1004">二、切片结论</h2>
+<p><strong>需要切片。</strong> 判据：</p>
+<ol><li>体量：6k+ 行、6 个能力域，单 Agent 串行执行上下文与时间成本都高；</li><li>耦合：A→B→{C,D,E} 是单向依赖，配合冻结契约即可并行；F 只依赖 API 契约，可与后端同时开工；</li><li>冲突面：每个切片改动的目录完全不同（见 4.3 写作用域），天然适合同工作区并行；</li><li>但 G（契约/骨架/集成）与 A+B 强耦合于真实样本，<strong>不能切</strong>，需要 Lead 先冻结契约并亲自收口。</li></ol>
+<p><strong>为什么不是 3 片</strong>：3 片会让 D（最重、最不确定）独占一片且无人并行分担，P1 阶段其他片空转。<strong>为什么不是 8 片</strong>：再拆就要把 A 的 OOXML/BIFF 分给两人，但两者共用 <code>model.py</code> 且都要在同一批样本上联调，沟通成本高于收益；F 再拆会共享同一份 <code>app.js</code>，产生写冲突。</p>
+<h3 id="sec1005">2.1 切片总表</h3>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>切片</th>
+<th>名称</th>
+<th>范围</th>
+<th>写作用域（互斥）</th>
+<th>前置依赖</th>
+<th>产出物</th>
+<th>验收门</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>S0</strong></td>
+<td>契约与骨架（Lead，串行）</td>
+<td><code>model.py</code> 数据类、<code>server.py</code> + <code>api.py</code> 空实现、错误格式、任务/下载机制、<code>启动.bat</code>、mock 数据</td>
+<td><code>app/core/model.py</code> <code>app/server.py</code> <code>app/api.py</code> <code>启动.bat</code> <code>app/web/index.html</code></td>
+<td>无</td>
+<td>可启动的空壳服务 + 冻结契约文档 + mock JSON</td>
+<td>各切片能 import 契约、前端能对着 mock 跑通页面</td>
+</tr>
+<tr>
+<td><strong>S1</strong></td>
+<td>采集层 A</td>
+<td>嗅探 + ooxml/biff/csv 三个 reader + 统一 Workbook 模型填充</td>
+<td><code>app/core/sniff.py</code> <code>app/core/readers/**</code></td>
+<td>S0</td>
+<td>3 个 reader + 各格式单测</td>
+<td>65 个真实文件全部可解析（或给出明确跳过原因），单元格/合并/类型正确</td>
+</tr>
+<tr>
+<td><strong>S2</strong></td>
+<td>结构识别 B</td>
+<td>表头多级识别、数据区/小计/占位行判定、归一化</td>
+<td><code>app/core/detect.py</code> <code>app/core/normalize.py</code></td>
+<td>S0、S1 接口</td>
+<td>识别器 + 归一化器 + fixture 测试</td>
+<td>台账表识别出 58 字段/2 级表头，小计行正确排除；工单类表识别正确</td>
+</tr>
+<tr>
+<td><strong>S3</strong></td>
+<td>检索引擎 C</td>
+<td>倒排索引、增量刷新、查询与打分、片段、导出</td>
+<td><code>app/core/index.py</code> <code>app/core/search.py</code> <code>app/services/search_service.py</code></td>
+<td>S0、S2 契约</td>
+<td>搜索服务 + API 落地 + 性能报告</td>
+<td>抽查 20 个单元格 100% 可检索；p95 &lt; 300 ms</td>
+</tr>
+<tr>
+<td><strong>S4</strong></td>
+<td>映射与模板 D</td>
+<td>模板登记/替换、<strong>双模式映射引擎（字段/区域转置）</strong>、自动推荐、方案 CRUD、模板克隆注入、预演</td>
+<td><code>app/core/mapping.py</code> <code>app/core/template.py</code> <code>app/core/xlsx_writer.py</code> <code>app/services/*convert*</code> <code>data/profiles/**</code> <code>data/templates/**</code></td>
+<td>S0、S2 契约</td>
+<td>转换服务 + API + 输出文件</td>
+<td>生成台账在 WPS 无修复提示、样式/合并与模板一致、数据行正确；<strong>换模板可用；行→列转置正确</strong></td>
+</tr>
+<tr>
+<td><strong>S5</strong></td>
+<td>双表对比 E</td>
+<td>主键推荐、匹配、字段级差异、<strong>左右坐标输出</strong>、报告导出</td>
+<td><code>app/core/compare.py</code> <code>app/services/compare_service.py</code> <code>app/core/export.py</code></td>
+<td>S0、S2 契约</td>
+<td>对比服务 + API + 报告</td>
+<td>对"改前/改后"两份台账差异与人工一致；脏主键有告警；<strong>每条差异带左右文件/行/列</strong></td>
+</tr>
+<tr>
+<td><strong>S8</strong></td>
+<td>编辑写回 H</td>
+<td>冲突检测、备份、zip 最小改动写回、写后自检/回滚、审计、撤销、索引增量更新</td>
+<td><code>app/core/writers/**</code> <code>app/core/audit.py</code> <code>app/services/edit_service.py</code> <code>data/backup/**</code> <code>data/audit/**</code></td>
+<td>S0、S1 读取接口</td>
+<td>写回服务 + API + 审计</td>
+<td>改文本/数值/公式后 WPS 无修复提示；其他内容不变；备份可还原；冲突被拒绝</td>
+</tr>
+<tr>
+<td><strong>S6</strong></td>
+<td>前端 F</td>
+<td>5 页面、网格预览、<strong>映射矩阵+框选+预演</strong>、<strong>单元格编辑/查找替换</strong>、差异三色、轮询、下载</td>
+<td><code>app/web/**</code>（除 <code>index.html</code> 骨架由 S0 提供）</td>
+<td>S0（API 契约）</td>
+<td>完整单页应用</td>
+<td>断开后端 mock 也能走通交互；联调后各功能可用</td>
+</tr>
+<tr>
+<td><strong>S7</strong></td>
+<td>集成收口（Lead）</td>
+<td>联调、真实目录回归、打包、README、缺陷修复</td>
+<td>全局（限收口期）</td>
+<td>S1–S6、S8</td>
+<td>可交付版本 + 验收记录</td>
+<td>验收清单全绿（见架构文档第四节）</td>
+</tr>
+</tbody></table></div>
+<h3 id="sec1006">2.2 并行执行计划</h3>
+<pre><code>阶段 P0（串行，~30–40 min）
+  Lead：冻结 model.py / JSON API / 目录骨架 / mock 数据 / 启动.bat
+        └─ 门禁：契约 import 通过、空壳服务能起、mock 可被前端读取
+                │
+阶段 P1（并行，~90–120 min）────────────────────────────────────
+  S1 采集层      S2 结构识别        S6 前端(对 mock)      S4 模板登记+克隆探路
+  （S2 用 S1 的模型契约 + 自造 fixture 先行；S4 先把模板包结构与"数据行克隆"跑通）
+                │                    │
+阶段 P2（并行，~90 min）────────────────────────────────────────
+  S2 收尾 → S3 检索   S4 映射引擎+区域转置   S5 双表对比+坐标
+  S8 编辑写回         S6 对接真实 API
+                │
+阶段 P3（Lead 收口，~60–90 min）
+  联调 → 真实目录回归 → 验收清单 → README/打包</code></pre>
+<p><strong>关键同步点（必须对齐，否则返工）</strong>：</p>
+<ol><li><strong>P0 结束</strong>：<code>model.py</code>（含 <code>CellRef</code>/<code>TemplateDef</code>/<code>MappingRule</code>/<code>EditOp</code>）、API 请求/响应 JSON 结构、错误码 —— 冻结后任何变更必须 Lead 广播；</li><li><strong>P1 中段</strong>：S1 交付 <code>WorkbookModel</code> 真实实现，S2 用它替换 fixture；</li><li><strong>P2 开始</strong>：S2 交付 <code>TableModel</code> 真实实现，S3/S4/S5/S8 从 mock 切真实数据；</li><li><strong>P2 结束</strong>：S3/S4/S5/S6/S8 各自 API 可调通，Lead 开始端到端。</li></ol>
+<h3 id="sec1007">2.3 写作用域与冲突规避</h3>
+<ul><li>每个切片只写自己表内的目录；<code>app/core/model.py</code>、<code>app/core/cellref.py</code>、<code>app/server.py</code>、<code>app/api.py</code> <strong>只有 Lead 能改</strong>；</li><li>若某切片确实需要改契约：先在群内提出，由 Lead 改并广播新版本号（<code>CONTRACT_VERSION</code>），不允许各自偷偷加字段；</li><li><code>app/web/index.html</code> 由 S0 定骨架，S6 只能改 <code>app/web/pages/*</code>、<code>app/web/app.js</code>、<code>style.css</code>；</li><li>**写回（S8）只动自己的 <code>writers/</code>、<code>audit.py</code>、<code>edit_service.py</code>**，不得触碰 <code>readers/</code>；S4 只动 <code>template.py</code>/<code>mapping.py</code>/<code>xlsx_writer.py</code>，两者互不越界；</li><li>测试文件按域分目录：<code>tests/test_readers_*</code>、<code>tests/test_detect_*</code>、<code>tests/test_search_*</code>、<code>tests/test_convert_*</code>、<code>tests/test_compare_*</code>、<code>tests/test_edit_*</code>，不共享测试文件。</li></ul>
+<h3 id="sec1008">2.4 不建议切片的部分（必须串行）</h3>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>部分</th>
+<th>原因</th>
+</tr></thead><tbody>
+<tr>
+<td>契约（数据类 + API）</td>
+<td>并行开发的地基，切了就会各写各的</td>
+</tr>
+<tr>
+<td>服务骨架与静态托管</td>
+<td>所有切片的前置；同时也是 Lead 的集成入口</td>
+</tr>
+<tr>
+<td>采集层（A）与结构识别（B）的联调</td>
+<td>判据必须在真实文件上反复调，两人来回传接口比一人做慢</td>
+</tr>
+<tr>
+<td>端到端集成与真机验收（WPS 打开输出文件）</td>
+<td>需要全局视角，且是本项目唯一的人工验收环节</td>
+</tr>
+<tr>
+<td>启动脚本/README/打包</td>
+<td>收口期一次成型，避免多方修改</td>
+</tr>
+</tbody></table></div>
+<hr>
+<h2 id="sec1009">三、质量门与测试策略</h2>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>层级</th>
+<th>内容</th>
+<th>责任</th>
+</tr></thead><tbody>
+<tr>
+<td>单测</td>
+<td>reader（3 格式 × 真实文件快照）、detect（台账/工单/无表头表）、normalize（全半角/日期/手机号）、index（召回/打分）、mapping（列→列/转置/区域）、compare（增删改/重复键/左右坐标）、edit（三种值类型写回 + 自检 + 回滚）</td>
+<td>各切片自测，Lead 抽查</td>
+</tr>
+<tr>
+<td>契约测试</td>
+<td>所有 API handler 用 mock 输入跑通，响应结构与冻结契约一致；**搜索/对比响应必须含完整 <code>CellRef</code> 字段**</td>
+<td>S0 建立，切片遵守</td>
+</tr>
+<tr>
+<td>端到端</td>
+<td>真实目录：扫描→索引→搜索→编辑→映射（含转置）→生成→对比→导出</td>
+<td>Lead 收口</td>
+</tr>
+<tr>
+<td>人工验收</td>
+<td>①随机单元格可检索且带文件/行/列 ②生成台账 WPS 打开无修复提示 ③差异结果与人工一致且带左右坐标 ④改一个格子后文件仍可正常打开</td>
+<td>Lead + 用户</td>
+</tr>
+</tbody></table></div>
+<p><strong>每个切片完成的定义（DoD）</strong>：代码 + 单测通过 + 该域 API 在真实数据上跑通 + 更新本切片在 README/接口表中的说明。</p>
+<hr>
+<h2 id="sec1010">四、时间与资源估算</h2>
+<div class="tablewrap"><table>
+<thead><tr>
+<th>阶段</th>
+<th>串行工作量（单人）</th>
+<th>并行墙钟</th>
+<th>人力</th>
+</tr></thead><tbody>
+<tr>
+<td>P0 契约骨架</td>
+<td>0.5–1 人时</td>
+<td>~40 min</td>
+<td>Lead</td>
+</tr>
+<tr>
+<td>P1 采集/识别/前端/模板探路</td>
+<td>7–9 人时</td>
+<td>~2 h</td>
+<td>4 个切片</td>
+</tr>
+<tr>
+<td>P2 检索/映射/对比/写回/前端联调</td>
+<td>9–12 人时</td>
+<td>~1.5 h</td>
+<td>5 个切片</td>
+</tr>
+<tr>
+<td>P3 集成收口</td>
+<td>2–3 人时</td>
+<td>~1.5 h</td>
+<td>Lead</td>
+</tr>
+<tr>
+<td><strong>合计</strong></td>
+<td><strong>19–25 人时</strong></td>
+<td><strong>≈ 5 小时</strong></td>
+<td>6 人（Lead + 5）</td>
+</tr>
+</tbody></table></div>
+<blockquote><p>若最终只允许 2 个并行体，则 P1/P2 合并为三轮：<code>S1+S2</code> → <code>S4+S8</code> → <code>S3+S5+S6</code>，墙钟约 7–9 小时。</p></blockquote>
+<hr>
+<h2 id="sec1011">五、切片决策记录（TL;DR）</h2>
+<ul><li><strong>要切</strong>：体量 7k+ 行、7 个单向依赖的能力域、写作用域天然不重叠；</li><li><strong>切 6 个开发切片</strong>：S1 采集、S2 识别、S3 检索、S4 映射与模板（含转置）、S5 对比、S8 编辑写回，加 S6 前端，共 <strong>7 个开发切片</strong>，外加 Lead 的 S0 契约与 S7 收口；</li><li><strong>先冻契约再并行</strong>：<code>model.py</code>（含 <code>CellRef</code>/<code>TemplateDef</code>/<code>MappingRule</code>/<code>EditOp</code>）+ JSON API 是唯一同步点，冻结前不开工；</li><li><strong>不切的</strong>：契约、骨架、A+B 联调、端到端验收、打包 —— 全部由 Lead 串行兜住；</li><li><strong>最大剩余风险</strong>在 S4（样式保真 + 转置语义）、S8（写坏文件不可逆）与 S2（表头判据）：S4/S8 在 P1 各先跑"模板包结构探路"和"单格写回探路"，S2 在 P1 用 fixture 先行，把风险前移。</li></ul>
+</main>
+</body>
+</html>
